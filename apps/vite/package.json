@@ -10,9 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tamagui/animations-css": "^1.96.0",
+    "@tamagui/lucide-icons": "^1.96.0",
     "@tamagui/vite-plugin": "^1.96.0",
     "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "react-dom": "18.2.0",
+    "react-native-svg": "^15.2.0",
+    "tamagui": "^1.96.0"
   },
   "devDependencies": {
     "@tanstack/router-devtools": "1.31.8",

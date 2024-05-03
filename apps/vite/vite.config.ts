@@ -1,9 +1,12 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react-swc'
 import { TanStackRouterVite } from '@tanstack/router-vite-plugin'
-import tamaguiConfig from './src/tamagui.config.ts'
 import { tamaguiExtractPlugin, tamaguiPlugin } from '@tamagui/vite-plugin'
 
+const tamaguiConfig = {
+    components: ['tamagui'],
+    config: 'src/tamagui.config.ts',
+}
 // https://vitejs.dev/config/
 export default defineConfig({
     plugins: [
