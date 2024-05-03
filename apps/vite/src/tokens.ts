@@ -76,8 +76,7 @@ const radius = {
 
 const color = {
     darkTransparent: 'rgba(10,10,10,0)',
-
-    dark1: '#050505',
+    dark1: '#101010',
     dark2: '#151515',
     dark3: '#191919',
     dark4: '#232323',

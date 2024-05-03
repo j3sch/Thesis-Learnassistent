@@ -4,15 +4,15 @@ import { TanStackRouterVite } from '@tanstack/router-vite-plugin'
 import { tamaguiExtractPlugin, tamaguiPlugin } from '@tamagui/vite-plugin'
 
 const tamaguiConfig = {
-    components: ['tamagui'],
-    config: 'src/tamagui.config.ts',
+  components: ['tamagui'],
+  config: 'src/tamagui.config.ts',
 }
 // https://vitejs.dev/config/
 export default defineConfig({
-    plugins: [
-        react(),
-        TanStackRouterVite(),
-        tamaguiPlugin(tamaguiConfig),
-        process.env.NODE_ENV === 'production' ? tamaguiExtractPlugin(tamaguiConfig) : null,
-    ].filter(Boolean),
+  plugins: [
+    react(),
+    TanStackRouterVite(),
+    tamaguiPlugin(tamaguiConfig),
+    process.env.NODE_ENV === 'production' ? tamaguiExtractPlugin(tamaguiConfig) : null,
+  ].filter(Boolean),
 })
