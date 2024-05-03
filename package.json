@@ -8,6 +8,7 @@
         "ios": "cd apps/expo && bun ios",
         "android": "cd apps/expo && bun android",
         "web": "cd apps/expo && bun web",
+        "vite": "cd apps/vite && bun dev",
         "api": "cd packages/api && bun dev",
         "generate": "cd packages/api && bun generate",
         "migrate:local": "cd packages/api && bun migrate:local",
