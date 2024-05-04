@@ -1,0 +1,21 @@
+::-webkit-scrollbar {
+    width: 8px; /* Breite des vertikalen Scrollbalkens */
+    height: 8px; /* Höhe des horizontalen Scrollbalkens */
+}
+
+/* Macht die Bahn des Scrollbalkens (Track) transparent */
+::-webkit-scrollbar-track {
+    background: transparent; /* Macht den Track unsichtbar */
+}
+
+/* Stil für den Thumb (den beweglichen Teil des Scrollbalkens) */
+::-webkit-scrollbar-thumb {
+    background-color: #282828; /* Farbe des Thumbs */
+    border-radius: 6px; /* Runde Ecken für den Thumb */
+    border: 2px solid transparent; /* Optional: Rand um den Thumb */
+}
+
+/* Optional: Stil für den Thumb beim Hover */
+::-webkit-scrollbar-thumb:hover {
+    background-color: #424242; /* Dunklere Farbe beim Hover */
+}

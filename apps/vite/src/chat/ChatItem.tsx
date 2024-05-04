@@ -3,7 +3,7 @@ import { Paragraph, YStack } from 'tamagui'
 export const ChatItem = ({ item }: { item: any }) => {
     return (
         <>
-            <YStack gap='$2'>
+            <YStack gap='$2' maxWidth={768}>
                 <Paragraph fontSize={16} maxWidth={'85%'}>
                     {item.source}
                 </Paragraph>

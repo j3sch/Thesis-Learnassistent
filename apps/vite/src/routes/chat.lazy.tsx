@@ -3,13 +3,13 @@ import { ChatWrapper } from '../chat/WebWrapper'
 import { ChatScreen } from '../chat'
 
 export const Route = createLazyFileRoute('/chat')({
-    component: About,
+  component: About,
 })
 
 function About() {
-    return (
-        <ChatWrapper>
-            <ChatScreen />
-        </ChatWrapper>
-    )
+  return (
+    <ChatWrapper>
+      <ChatScreen />
+    </ChatWrapper>
+  )
 }
