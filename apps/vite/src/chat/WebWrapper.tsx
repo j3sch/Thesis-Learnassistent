@@ -1,4 +1,4 @@
-import { XStack, YStack, isWeb } from 'tamagui'
+import { YStack } from 'tamagui'
 
 export function ChatWrapper({ children }: { children: React.ReactNode }) {
     return (

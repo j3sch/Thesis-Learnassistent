@@ -9,6 +9,7 @@ export function Header() {
                 backgroundColor={'$backgroundTransparent'}
                 alignItems='center'
                 height={80}
+                //@ts-ignore
                 position='fixed'
                 t={0}
                 l={8}
