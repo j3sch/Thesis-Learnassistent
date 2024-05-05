@@ -5,21 +5,21 @@ import { Context as HonoContext } from 'hono'
 import { Bindings } from './worker'
 
 interface ApiContextProps {
-    db: DrizzleD1Database
-    c: HonoContext<{
-        Bindings: Bindings
-    }>
+  db: DrizzleD1Database
+  c: HonoContext<{
+    Bindings: Bindings
+  }>
 }
 
 export const createContext = async (
-    d1: D1Database,
-    c: HonoContext<{
-        Bindings: Bindings
-    }>
+  d1: D1Database,
+  c: HonoContext<{
+    Bindings: Bindings
+  }>
 ): Promise<ApiContextProps> => {
-    const db = createDb(d1)
+  const db = createDb(d1)
 
-    return { db, c }
+  return { db, c }
 }
 
 export type Context = inferAsyncReturnType<typeof createContext>

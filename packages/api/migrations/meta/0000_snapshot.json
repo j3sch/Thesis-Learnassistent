@@ -1,70 +1,35 @@
 {
   "version": "5",
   "dialect": "sqlite",
-  "id": "b4ee64d5-7b72-4828-8645-33c41f0af619",
+  "id": "6c16dd5b-8618-45f0-9778-434faf3a4525",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
-    "Car": {
-      "name": "Car",
+    "Exercise": {
+      "name": "Exercise",
       "columns": {
         "id": {
           "name": "id",
-          "type": "text",
+          "type": "integer",
           "primaryKey": true,
           "notNull": true,
+          "autoincrement": true
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         },
-        "make": {
-          "name": "make",
+        "question": {
+          "name": "question",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "model": {
-          "name": "model",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "year": {
-          "name": "year",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "color": {
-          "name": "color",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "price": {
-          "name": "price",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "mileage": {
-          "name": "mileage",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "fuelType": {
-          "name": "fuelType",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "transmission": {
-          "name": "transmission",
+        "solution": {
+          "name": "solution",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
@@ -76,18 +41,18 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "User": {
-      "name": "User",
+    "Note": {
+      "name": "Note",
       "columns": {
         "id": {
           "name": "id",
-          "type": "text",
+          "type": "integer",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": true
         },
-        "email": {
-          "name": "email",
+        "text": {
+          "name": "text",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
