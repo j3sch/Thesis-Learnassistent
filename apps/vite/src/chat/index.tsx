@@ -1,16 +1,18 @@
-import { YStack } from 'tamagui'
 import { ChatInput } from './ChatInput'
 import { ChatScrollView } from './Scrollview'
 import { Header } from './Header'
+import { useChat } from 'ai/react'
 
 export function ChatScreen() {
-    const ChatView = () => (
-        <>
-            <Header />
-            <ChatScrollView />
-            <ChatInput />
-        </>
-    )
+  const chat = useChat({
+    api: `${import.meta.env.VITE_PUBLIC_API_URL}/sse`,
+  })
 
-    return <ChatView />
+  return (
+    <>
+      <Header />
+      <ChatScrollView chat={chat} />
+      <ChatInput chat={chat} />
+    </>
+  )
 }

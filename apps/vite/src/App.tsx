@@ -34,11 +34,11 @@ export function App() {
       links: [
         loggerLink({
           enabled: (opts) =>
-            process.env.NODE_ENV === 'development' ||
+            import.meta.env.NODE_ENV === 'development' ||
             (opts.direction === 'down' && opts.result instanceof Error),
         }),
         httpBatchLink({
-          url: `${process.env.NEXT_PUBLIC_API_URL}/trpc`,
+          url: `${import.meta.env.VITE_PUBLIC_API_URL}/trpc`,
         }),
       ],
     })
