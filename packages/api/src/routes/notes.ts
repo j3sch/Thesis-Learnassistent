@@ -15,16 +15,30 @@ import { createStuffDocumentsChain } from 'langchain/chains/combine_documents'
 import { StringOutputParser } from '@langchain/core/output_parsers'
 import { createConversationalRetrievalChain } from '../conversational_retrieval_chain'
 import { HttpResponseOutputParser } from 'langchain/output_parsers'
+import { RetrievalQAChain, loadQAStuffChain } from 'langchain/chains'
+import { PromptTemplate } from '@langchain/core/prompts'
+import { Pinecone } from '@pinecone-database/pinecone'
+import { PineconeStore } from '@langchain/pinecone'
 
 export type Bindings = {
     DB: D1Database
     OPENAI_API_KEY: string
     SEARCHAPI_API_KEY: string
+    PINECONE_API_KEY: string
+    PINECONE_INDEX: string
 }
 
 let aiKnowledgeVectorstore: CloudflareVectorizeStore
 
 export const notes = new Hono<{ Bindings: Bindings }>()
+
+const promptTemplate = `Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.
+
+{context}
+
+Question: {question}
+Answer in German:`
+const prompt = PromptTemplate.fromTemplate(promptTemplate)
 
 const upsertDocsToVectorstore = async (vectorstore: VectorStore, docs: Document[]) => {
     const ids = []
@@ -44,51 +58,17 @@ const upsertDocsToVectorstore = async (vectorstore: VectorStore, docs: Document[
 }
 
 notes.post('/', async (c: CustomContext) => {
-    // globalThis.setImmediate = ((fn: () => {}) => setTimeout(fn, 0)) as any
-    // const cloudflareFetchResponse = await fetch(
-    //     'https://www.cloudflare.com/resources/assets/slt3lc6tev37/3HWObubm6fybC0FWUdFYAJ/5d5e3b0a4d9c5a7619984ed6076f01fe/Cloudflare_for_Campaigns_Security_Guide.pdf'
-    // )
-    // const cloudflarePdfBlob = await cloudflareFetchResponse.blob()
-    // const pdfLoader = new WebPDFLoader(cloudflarePdfBlob)
-    // const docs = await pdfLoader.load()
-
-    // const body = await c.req.parseBody()
-    // const file = body.file as File
-
-    // const loader = new TextLoader(file)
-    // const docs = await loader.load()
-
     const loader = new CheerioWebBaseLoader('https://developers.cloudflare.com/workers-ai/models/', {
         selector: 'body',
     })
 
-    const docs = await loader.load()
-
-    console.log('0')
-
-    // const body = await c.req.parseBody()
-    // const file = body.file as File
-
-    // if (!(file && file.type === 'application/pdf')) {
-    //     return c.text('PDF-File is missing', 400)
-    // }
-
-    // console.log('0')
-
-    // const loader = new WebPDFLoader(file)
-
-    // console.log('01')
-
     // const docs = await loader.load()
 
-    console.log('0000')
     const embeddings = new OpenAIEmbeddings({
         apiKey: c.env.OPENAI_API_KEY,
         model: 'text-embedding-3-small',
         dimensions: 768,
     })
-
-    console.log('1')
 
     // Tune based on your raw content.
     const splitter = new RecursiveCharacterTextSplitter({
@@ -96,39 +76,98 @@ notes.post('/', async (c: CustomContext) => {
         chunkOverlap: 200,
     })
 
-    const splitAiAgentDocs = await splitter.splitDocuments(docs)
+    // const splitAiAgentDocs = await splitter.splitDocuments(docs)
+
     aiKnowledgeVectorstore = new CloudflareVectorizeStore(embeddings, {
         index: c.env.VECTORIZE_INDEX,
     })
 
-    console.log('2')
+    const pinecone = new Pinecone({
+        apiKey: c.env.PINECONE_API_KEY,
+    })
 
-    // biome-ignore lint/complexity/noForEach: <explanation>
-    // splitAiAgentDocs.forEach((doc) => {
-    //     const d = doc.pageContent
-    //     console.log(d)
-    //     console.log('/n----------------------------------------------------/n')
-    // })
+    const pineconeIndex = pinecone.Index(c.env.PINECONE_INDEX)
 
-    const r = await upsertDocsToVectorstore(aiKnowledgeVectorstore, splitAiAgentDocs)
+    const docs = [
+        new Document({
+            metadata: { foo: 'bar' },
+            pageContent: 'pinecone is a vector db',
+        }),
+        new Document({
+            metadata: { foo: 'bar' },
+            pageContent: 'the quick brown fox jumped over the lazy dog',
+        }),
+        new Document({
+            metadata: { baz: 'qux' },
+            pageContent: 'lorem ipsum dolor sit amet',
+        }),
+        new Document({
+            metadata: { baz: 'qux' },
+            pageContent: 'pinecones are the woody fruiting body and of a pine tree',
+        }),
+    ]
 
-    console.log(r)
+    await PineconeStore.fromDocuments(docs, embeddings, {
+        pineconeIndex,
+    })
 
-    console.log('3')
+    return c.text('Success')
+
+    // const db = c.get<DrizzleD1Database>('db')
+    // const ids = []
+    // for (const doc of splitAiAgentDocs) {
+    //     const text = doc.pageContent
+    //     const results = await db.insert(NoteTable).values({ text }).returning()
+    //     const record = results.length ? results[0] : null
+    //     if (!record) {
+    //         return c.text('Failed to create note', 500)
+    //     }
+    //     const { id } = record
+    //     ids.push(id)
+    // }
+
+    // await aiKnowledgeVectorstore.addDocuments(
+    //     [
+    //         {
+    //             pageContent: 'der apfel ist lila',
+    //             metadata: {},
+    //         },
+    //         {
+    //             pageContent: 'morgen ist dienstag',
+    //             metadata: {},
+    //         },
+    //         {
+    //             pageContent: 'hi',
+    //             metadata: {},
+    //         },
+    //     ],
+    //     { ids: ['id1', 'id2', 'id3'] }
+    // )
+
+    const retriever = aiKnowledgeVectorstore.asRetriever()
+    const llm = new ChatOpenAI({ model: 'gpt-4-turbo', temperature: 0, apiKey: c.env.OPENAI_API_KEY })
+
+    // const chain = RetrievalQAChain.fromLLM(llm, retriever)
+
+    const chain = new RetrievalQAChain({
+        returnSourceDocuments: true,
+        combineDocumentsChain: loadQAStuffChain(llm, { prompt }),
+        retriever,
+    })
+
+    const res = await chain.invoke({
+        query: 'Welche farbe hat der Apfel?',
+    })
+
+    console.log(JSON.stringify(res))
+
+    console.log('yessss')
+
+    // const r = await upsertDocsToVectorstore(aiKnowledgeVectorstore, splitAiAgentDocs)
 
     return c.text('Success')
 
     // Ingest content from a blog post on AI agents
-
-    const db = c.get<DrizzleD1Database>('db')
-
-    const results = await db.insert(NoteTable).values({ text }).returning()
-
-    const record = results.length ? results[0] : null
-
-    if (!record) {
-        return c.text('Failed to create note', 500)
-    }
 
     const openai = c.get<OpenAI>('openai')
 
@@ -144,8 +183,6 @@ notes.post('/', async (c: CustomContext) => {
     if (!values) {
         return c.text('Failed to generate vector embedding', 500)
     }
-
-    const { id } = record
 
     const inserted = await c.env.VECTORIZE_INDEX.upsert([
         {
@@ -175,19 +212,38 @@ notes.get('/', async (c: CustomContext) => {
     })
 
     const retriever = aiKnowledgeVectorstore.asRetriever()
+    const llm = new ChatOpenAI({ model: 'gpt-4-turbo', temperature: 0, apiKey: c.env.OPENAI_API_KEY })
 
-    console.log('1')
-    const prompt = await pull<ChatPromptTemplate>('rlm/rag-prompt')
-    console.log('2')
-    const llm = new ChatOpenAI({ model: 'gpt-3.5-turbo', temperature: 0, apiKey: c.env.OPENAI_API_KEY })
-    console.log('3')
+    // const chain = RetrievalQAChain.fromLLM(llm, retriever)
 
-    const result = await aiKnowledgeVectorstore.similaritySearch('What is the Text Classification model?', 5)
+    const chain = new RetrievalQAChain({
+        returnSourceDocuments: true,
+        combineDocumentsChain: loadQAStuffChain(llm, { prompt }),
+        retriever,
+    })
 
-    const matches = await aiKnowledgeVectorstore.similaritySearchWithScore('What is the Text Classification model?', 3)
+    const res = await chain.invoke({
+        query: 'Welche farbe hat der Apfel?',
+    })
+    console.log(res.text)
 
-    console.log(JSON.stringify(matches))
-    return Response.json(result)
+    return c.text('Success')
+
+    // const prompt = await pull<ChatPromptTemplate>('rlm/rag-prompt')
+    // console.log('2')
+    // console.log('3')
+
+    // const result = await aiKnowledgeVectorstore.similaritySearch('What is the Text Classification model?', 5)
+
+    // const matches = await aiKnowledgeVectorstore.similaritySearchWithScore('What is the Text Classification model?', 3)
+
+    // console.log(JSON.stringify(matches))
+
+    // const SIMILARITY_CUTOFF = 0.75
+    // const vectorQuery = await c.env.VECTORIZE_INDEX.query(vectors, { topK: 1 })
+    // const vecIds = vectorQuery.matches
+    //     .filter((vec: VectorizeMatch) => vec.score > SIMILARITY_CUTOFF)
+    //     .map((vec: VectorizeMatch) => vec.id)
 
     //     const chain = createConversationalRetrievalChain({
     //         model: llm,
