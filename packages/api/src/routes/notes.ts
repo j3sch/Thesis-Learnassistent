@@ -19,6 +19,12 @@ import { RetrievalQAChain, loadQAStuffChain } from 'langchain/chains'
 import { PromptTemplate } from '@langchain/core/prompts'
 import { Pinecone } from '@pinecone-database/pinecone'
 import { PineconeStore } from '@langchain/pinecone'
+import { createClient } from '@supabase/supabase-js'
+import { SupabaseVectorStore } from '@langchain/community/vectorstores/supabase'
+import { PlaywrightWebBaseLoader } from 'langchain/document_loaders/web/playwright'
+import { WebPDFLoader } from 'langchain/document_loaders/web/pdf'
+import cheerio from 'cheerio'
+import { HtmlToTextTransformer } from '@langchain/community/document_transformers/html_to_text'
 
 export type Bindings = {
     DB: D1Database
@@ -26,13 +32,16 @@ export type Bindings = {
     SEARCHAPI_API_KEY: string
     PINECONE_API_KEY: string
     PINECONE_INDEX: string
+    PINECONE_ENVIRONMENT: string
+    SUPABASE_PRIVATE_KEY: string
+    SUPABASE_URL: string
 }
 
 let aiKnowledgeVectorstore: CloudflareVectorizeStore
 
 export const notes = new Hono<{ Bindings: Bindings }>()
 
-const promptTemplate = `Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.
+const promptTemplate = `Use the following pieces of context to answer the question at the end. If the information is not provided in the context, then just say that you don't know, don't try to make up an answer.
 
 {context}
 
@@ -58,25 +67,103 @@ const upsertDocsToVectorstore = async (vectorstore: VectorStore, docs: Document[
 }
 
 notes.post('/', async (c: CustomContext) => {
-    const loader = new CheerioWebBaseLoader('https://developers.cloudflare.com/workers-ai/models/', {
-        selector: 'body',
-    })
+    const loader = new CheerioWebBaseLoader(
+        'https://www.bpb.de/themen/politisches-system/deutsche-demokratie/39287/demokratie/',
+        {
+            selector: 'article',
+        }
+    )
 
-    // const docs = await loader.load()
+    const docs = await loader.load()
 
-    const embeddings = new OpenAIEmbeddings({
-        apiKey: c.env.OPENAI_API_KEY,
-        model: 'text-embedding-3-small',
-        dimensions: 768,
-    })
+    // console.log(JSON.stringify(docs))
+    // console.log('-----------------------------------------------')
 
-    // Tune based on your raw content.
-    const splitter = new RecursiveCharacterTextSplitter({
+    const splitter = RecursiveCharacterTextSplitter.fromLanguage('html')
+    const transformer = new HtmlToTextTransformer({
         chunkSize: 1024,
         chunkOverlap: 200,
     })
 
+    const sequence = splitter.pipe(transformer)
+
+    const newDocuments = await sequence.invoke(docs)
+
+    console.log(newDocuments)
+
+    // const s = new RecursiveCharacterTextSplitter({
+    //     chunkSize: 1024,
+    //     chunkOverlap: 200,
+    // })
+
+    // const sp = await s.splitText(docs)
+
+    // console.log(JSON.stringify(sp))
+
+    // const htmlContent = docs[0].pageContent
+
+    // // Verwenden von Cheerio, um den HTML-Inhalt zu laden
+    // const $ = cheerio.load(htmlContent)
+
+    // // Entfernen von HTML-Elementen und Extrahieren des reinen Textinhalts
+    // // Hier als Beispiel: Extrahieren des Textinhalts des Body-Elements
+    // const pureContent = $('body').text()
+
+    // // Angenommen, `pureContent` ist der mit Cheerio extrahierte Text
+    // let bereinigterText = pureContent.replace(/\n/g, ' ').replace(/\r/g, ' ')
+
+    // // Entfernen von zusätzlichen Leerzeichen, die durch das Entfernen der Zeilenumbrüche entstehen könnten
+    // bereinigterText = bereinigterText.replace(/\s+/g, ' ').trim()
+
+    // const body = await c.req.text()
+    // console.log(body)
+    // if (body.type === "text") {
+    //   const text = await body.value;
+    //   console.log(text); // Hier ist Ihr Textinhalt
+    //   ctx.response.body = "Text erhalten";
+    // }
+
+    return c.text('Success')
+
+    const embeddings = new OpenAIEmbeddings({
+        apiKey: c.env.OPENAI_API_KEY,
+        model: 'text-embedding-3-small',
+        dimensions: 1536,
+    })
+
+    // Tune based on your raw content.
+    // const splitter = new RecursiveCharacterTextSplitter({
+    //     chunkSize: 1024,
+    //     chunkOverlap: 200,
+    // })
+
     // const splitAiAgentDocs = await splitter.splitDocuments(docs)
+
+    console.log(JSON.stringify(newDocuments))
+
+    const privateKey = c.env.SUPABASE_PRIVATE_KEY
+    if (!privateKey) throw new Error('Expected env var SUPABASE_PRIVATE_KEY')
+
+    const url = c.env.SUPABASE_URL
+    if (!url) throw new Error('Expected env var SUPABASE_URL')
+
+    const client = createClient(url, privateKey)
+
+    console.log('2')
+    const vectorStore = await SupabaseVectorStore.fromDocuments(newDocuments, embeddings, {
+        client,
+        tableName: 'documents',
+        queryName: 'match_documents',
+    })
+
+    console.log('3')
+
+    const resultOne = await vectorStore.similaritySearch('What is the Text Classification model?', 3)
+
+    console.log('4')
+    console.log(resultOne)
+
+    return c.text('Success')
 
     aiKnowledgeVectorstore = new CloudflareVectorizeStore(embeddings, {
         index: c.env.VECTORIZE_INDEX,
@@ -88,24 +175,24 @@ notes.post('/', async (c: CustomContext) => {
 
     const pineconeIndex = pinecone.Index(c.env.PINECONE_INDEX)
 
-    const docs = [
-        new Document({
-            metadata: { foo: 'bar' },
-            pageContent: 'pinecone is a vector db',
-        }),
-        new Document({
-            metadata: { foo: 'bar' },
-            pageContent: 'the quick brown fox jumped over the lazy dog',
-        }),
-        new Document({
-            metadata: { baz: 'qux' },
-            pageContent: 'lorem ipsum dolor sit amet',
-        }),
-        new Document({
-            metadata: { baz: 'qux' },
-            pageContent: 'pinecones are the woody fruiting body and of a pine tree',
-        }),
-    ]
+    // const docs = [
+    //     new Document({
+    //         metadata: { foo: 'bar' },
+    //         pageContent: 'pinecone is a vector db',
+    //     }),
+    //     new Document({
+    //         metadata: { foo: 'bar' },
+    //         pageContent: 'the quick brown fox jumped over the lazy dog',
+    //     }),
+    //     new Document({
+    //         metadata: { baz: 'qux' },
+    //         pageContent: 'lorem ipsum dolor sit amet',
+    //     }),
+    //     new Document({
+    //         metadata: { baz: 'qux' },
+    //         pageContent: 'pinecones are the woody fruiting body and of a pine tree',
+    //     }),
+    // ]
 
     await PineconeStore.fromDocuments(docs, embeddings, {
         pineconeIndex,
@@ -204,15 +291,26 @@ notes.get('/', async (c: CustomContext) => {
     const embeddings = new OpenAIEmbeddings({
         apiKey: c.env.OPENAI_API_KEY,
         model: 'text-embedding-3-small',
-        dimensions: 768,
+        dimensions: 1536,
     })
 
-    aiKnowledgeVectorstore = new CloudflareVectorizeStore(embeddings, {
-        index: c.env.VECTORIZE_INDEX,
+    const privateKey = c.env.SUPABASE_PRIVATE_KEY
+    if (!privateKey) throw new Error('Expected env var SUPABASE_PRIVATE_KEY')
+
+    const url = c.env.SUPABASE_URL
+    if (!url) throw new Error('Expected env var SUPABASE_URL')
+
+    const client = createClient(url, privateKey)
+
+    const vectorStore = new SupabaseVectorStore(embeddings, {
+        client,
+        tableName: 'documents',
+        queryName: 'match_documents',
     })
 
-    const retriever = aiKnowledgeVectorstore.asRetriever()
     const llm = new ChatOpenAI({ model: 'gpt-4-turbo', temperature: 0, apiKey: c.env.OPENAI_API_KEY })
+
+    const retriever = vectorStore.asRetriever()
 
     // const chain = RetrievalQAChain.fromLLM(llm, retriever)
 
@@ -223,11 +321,35 @@ notes.get('/', async (c: CustomContext) => {
     })
 
     const res = await chain.invoke({
-        query: 'Welche farbe hat der Apfel?',
+        query: 'What is the Text Classification model?',
     })
-    console.log(res.text)
 
-    return c.text('Success')
+    const result = res.text
+    console.log(result)
+    return c.text(result)
+
+    // const response2 = await retriever.invoke('What is the Text Classification model?')
+
+    // console.log(response2)
+
+    // aiKnowledgeVectorstore = new CloudflareVectorizeStore(embeddings, {
+    //     index: c.env.VECTORIZE_INDEX,
+    // })
+
+    // const retriever = aiKnowledgeVectorstore.asRetriever()
+
+    // const chain = RetrievalQAChain.fromLLM(llm, retriever)
+
+    // const chain = new RetrievalQAChain({
+    //     returnSourceDocuments: true,
+    //     combineDocumentsChain: loadQAStuffChain(llm, { prompt }),
+    //     retriever,
+    // })
+
+    // const res = await chain.invoke({
+    //     query: 'Welche farbe hat der Apfel?',
+    // })
+    // console.log(res.text)
 
     // const prompt = await pull<ChatPromptTemplate>('rlm/rag-prompt')
     // console.log('2')
