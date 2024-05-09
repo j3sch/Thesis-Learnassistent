@@ -2,31 +2,26 @@ import { UseChatHelpers } from 'ai/react'
 import { trpc } from '../utils/trpc'
 import { ChatItem } from './ChatItem'
 import { VirtualList } from './VirtualList'
-import { useEffect } from 'react'
+import { useExerciseIndex } from '../atoms/exercise'
 
 export function ChatScrollView({ chat }: { chat: UseChatHelpers }) {
-  const { messages, setMessages } = chat
+    const { messages } = chat
+    const [exerciseIndex] = useExerciseIndex()
 
-  const { data, isSuccess } = trpc.assistant.getNextExercise.useQuery(
-    {
-      exercise_id: 1,
-    },
-    {
-      refetchOnMount: false,
-    }
-  )
+    const { data } = trpc.assistant.getNextExercise.useQuery(
+        {
+            exercise_id: exerciseIndex,
+        },
+        {
+            refetchOnMount: false,
+        }
+    )
 
-  useEffect(() => {
-    if (isSuccess && data) {
-      setMessages([{ role: 'assistant', content: data.question, id: '1' }])
-    }
-  }, [data])
-
-  return (
-    <VirtualList
-      data={messages}
-      itemHeight={190}
-      renderItem={(item, index) => <ChatItem key={item.id} item={item} index={index} />}
-    />
-  )
+    return (
+        <VirtualList
+            data={[{ role: 'assistant', content: data?.question, id: '1' }, ...messages]}
+            itemHeight={190}
+            renderItem={(item, index) => <ChatItem key={item.id} item={item} index={index} />}
+        />
+    )
 }

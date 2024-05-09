@@ -8,6 +8,7 @@ import { PromptTemplate } from '@langchain/core/prompts'
 import { createClient } from '@supabase/supabase-js'
 import { SupabaseVectorStore } from '@langchain/community/vectorstores/supabase'
 import { HtmlToTextTransformer } from '@langchain/community/document_transformers/html_to_text'
+import { generateQAPairs } from '../utils/generate_qa_pairs'
 
 export type Bindings = {
     OPENAI_API_KEY: string
@@ -17,19 +18,19 @@ export type Bindings = {
 
 export const notes = new Hono<{ Bindings: Bindings }>()
 
-// const promptTemplate = `Use the following pieces of context to answer the question at the end. If the information is not provided in the context, then just say that you don't know, don't try to make up an answer.
-
-// {context}
-
-// Question: {question}
-// Answer in German:`
-
-const promptTemplate = `Is the requested Information in the following context? Answer with Yes or No!.
+const promptTemplate = `Use the following pieces of context to answer the question at the end. If the information is not provided in the context, then just say that you don't know, don't try to make up an answer.
 
 {context}
 
 Question: {question}
 Answer in German:`
+
+// const promptTemplate = `Is the requested Information in the following context? Answer with Yes or No!.
+
+// {context}
+
+// Question: {question}
+// Answer in German:`
 const prompt = PromptTemplate.fromTemplate(promptTemplate)
 
 notes.post('/', async (c: CustomContext) => {
@@ -41,15 +42,33 @@ notes.post('/', async (c: CustomContext) => {
 
     const docs = await loader.load()
 
-    const splitter = RecursiveCharacterTextSplitter.fromLanguage('html')
-    const transformer = new HtmlToTextTransformer({
-        chunkSize: 512,
-        chunkOverlap: 50,
-    })
+    // const textSplitter = new RecursiveCharacterTextSplitter({
+    //     chunkSize: 1000,
+    //     chunkOverlap: 150,
+    // })
+    // const splits = await textSplitter.splitDocuments(docs)
 
-    const sequence = splitter.pipe(transformer)
+    // // Entfernen von Zeilenumbrüchen in jedem Dokument
+    // const cleanedDocs = splits.map((doc) => {
+    //     const cleaned = doc.pageContent.replace(/\n/g, '') // Ersetzt alle Vorkommen von \n durch nichts
+    //     doc.pageContent = cleaned
+    //     return doc
+    // })
 
-    const newDocuments = await sequence.invoke(docs)
+    // console.log(JSON.stringify(cleanedDocs))
+
+    await generateQAPairs(docs, c)
+
+    return c.text('Success')
+
+    // const splitter = RecursiveCharacterTextSplitter.fromLanguage('html', {
+    //     chunkSize: 1000,
+    //     chunkOverlap: 100,
+    // })
+    // const transformer = new HtmlToTextTransformer()
+    // const sequence = splitter.pipe(transformer)
+    // const newDocuments = await sequence.invoke(docs)
+    // console.log(JSON.stringify(newDocuments))
 
     const embeddings = new OpenAIEmbeddings({
         apiKey: c.env.OPENAI_API_KEY,
@@ -65,7 +84,7 @@ notes.post('/', async (c: CustomContext) => {
 
     const client = createClient(supabaseUrl, privateKey)
 
-    await SupabaseVectorStore.fromDocuments(newDocuments, embeddings, {
+    await SupabaseVectorStore.fromDocuments(cleanedDocs, embeddings, {
         client,
         tableName: 'documents',
         queryName: 'match_documents',

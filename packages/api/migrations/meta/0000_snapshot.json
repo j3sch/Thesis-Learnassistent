@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "sqlite",
-  "id": "6c16dd5b-8618-45f0-9778-434faf3a4525",
+  "id": "4f034756-df5d-4526-91e7-ea172111d1aa",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "Exercise": {
@@ -14,13 +14,6 @@
           "notNull": true,
           "autoincrement": true
         },
-        "type": {
-          "name": "type",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
         "question": {
           "name": "question",
           "type": "text",
@@ -30,6 +23,13 @@
         },
         "solution": {
           "name": "solution",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source": {
+          "name": "source",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
