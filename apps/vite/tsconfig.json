@@ -7,7 +7,7 @@
         "skipLibCheck": true,
         "baseUrl": ".",
         "paths": {
-            "vite/*": ["./src/*"],
+            "@/*": ["src/*"],
             "@t4/api/*": ["../../packages/api/*"],
             "@t4/types/*": ["../../packages/types/*"]
         },
