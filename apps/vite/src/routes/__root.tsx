@@ -4,19 +4,16 @@ import { TanStackRouterDevtools } from '@tanstack/router-devtools'
 export const Route = createRootRoute({
   component: () => (
     <>
-      <Metadata />
+      <Style />
       <Outlet />
       {/* <TanStackRouterDevtools /> */}
     </>
   ),
 })
 
-const Metadata = () => (
-  <head>
-    <meta name='viewport' content='width=device-width,initial-scale=1' />
-    {/* Ensure a minimum width of 100% */}
-    <style>
-      {`
+const Style = () => (
+  <style>
+    {`
         body, #root {
           color-scheme: dark;
           min-width: 100% !important;
@@ -24,6 +21,5 @@ const Metadata = () => (
 
         }
       `}
-    </style>
-  </head>
+  </style>
 )
