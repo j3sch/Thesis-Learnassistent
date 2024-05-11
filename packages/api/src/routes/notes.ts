@@ -1,19 +1,23 @@
 import { Hono } from 'hono'
 import { CustomContext } from '@t4/types'
 import { OpenAIEmbeddings, ChatOpenAI } from '@langchain/openai'
-import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter'
 import { CheerioWebBaseLoader } from 'langchain/document_loaders/web/cheerio'
 import { RetrievalQAChain, loadQAStuffChain } from 'langchain/chains'
 import { PromptTemplate } from '@langchain/core/prompts'
 import { createClient } from '@supabase/supabase-js'
 import { SupabaseVectorStore } from '@langchain/community/vectorstores/supabase'
-import { HtmlToTextTransformer } from '@langchain/community/document_transformers/html_to_text'
 import { generateQAPairs } from '../utils/generate_qa_pairs'
+import { createHistoryAwareRetriever } from 'langchain/chains/history_aware_retriever'
+import { BasePromptTemplate } from '@langchain/core/prompts'
+import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter'
+import { initSupabase } from '../utils/supabase'
 
 export type Bindings = {
     OPENAI_API_KEY: string
     SUPABASE_PRIVATE_KEY: string
     SUPABASE_URL: string
+    TOGETHER_API_KEY: string
+    DB: D1Database
 }
 
 export const notes = new Hono<{ Bindings: Bindings }>()
@@ -29,6 +33,11 @@ Answer in German:`
 
 // {context}
 
+const rephrasePrompt = `Du bist ein Gemeinschaftskundenlehrer
+
+Chat History: {chat_history}
+User Input: {input}` as unknown as BasePromptTemplate<any>
+
 // Question: {question}
 // Answer in German:`
 const prompt = PromptTemplate.fromTemplate(promptTemplate)
@@ -42,24 +51,19 @@ notes.post('/', async (c: CustomContext) => {
 
     const docs = await loader.load()
 
-    // const textSplitter = new RecursiveCharacterTextSplitter({
-    //     chunkSize: 1000,
-    //     chunkOverlap: 150,
-    // })
-    // const splits = await textSplitter.splitDocuments(docs)
+    const textSplitter = new RecursiveCharacterTextSplitter({
+        chunkSize: 1000,
+        chunkOverlap: 150,
+    })
+    const splits = await textSplitter.splitDocuments(docs)
 
-    // // Entfernen von Zeilenumbrüchen in jedem Dokument
-    // const cleanedDocs = splits.map((doc) => {
-    //     const cleaned = doc.pageContent.replace(/\n/g, '') // Ersetzt alle Vorkommen von \n durch nichts
-    //     doc.pageContent = cleaned
-    //     return doc
-    // })
-
-    // console.log(JSON.stringify(cleanedDocs))
+    const cleanedDocs = splits.map((doc) => {
+        const cleaned = doc.pageContent.replace(/\n/g, '') // Ersetzt alle Vorkommen von \n durch nichts
+        doc.pageContent = cleaned
+        return doc
+    })
 
     await generateQAPairs(docs, c)
-
-    return c.text('Success')
 
     // const splitter = RecursiveCharacterTextSplitter.fromLanguage('html', {
     //     chunkSize: 1000,
@@ -76,13 +80,7 @@ notes.post('/', async (c: CustomContext) => {
         dimensions: 1536,
     })
 
-    const privateKey = c.env.SUPABASE_PRIVATE_KEY
-    if (!privateKey) throw new Error('Expected env var SUPABASE_PRIVATE_KEY')
-
-    const supabaseUrl = c.env.SUPABASE_URL
-    if (!supabaseUrl) throw new Error('Expected env var SUPABASE_URL')
-
-    const client = createClient(supabaseUrl, privateKey)
+    const client = initSupabase(c)
 
     await SupabaseVectorStore.fromDocuments(cleanedDocs, embeddings, {
         client,
@@ -102,13 +100,7 @@ notes.get('/', async (c: CustomContext) => {
         dimensions: 1536,
     })
 
-    const privateKey = c.env.SUPABASE_PRIVATE_KEY
-    if (!privateKey) throw new Error('Expected env var SUPABASE_PRIVATE_KEY')
-
-    const url = c.env.SUPABASE_URL
-    if (!url) throw new Error('Expected env var SUPABASE_URL')
-
-    const client = createClient(url, privateKey)
+    const client = initSupabase(c)
 
     const vectorStore = new SupabaseVectorStore(embeddings, {
         client,
@@ -116,11 +108,18 @@ notes.get('/', async (c: CustomContext) => {
         queryName: 'match_documents',
     })
 
-    const llm = new ChatOpenAI({ model: 'gpt-4-turbo', temperature: 0, apiKey: c.env.OPENAI_API_KEY })
+    const llm = new ChatOpenAI({ model: 'gpt-4-turbo', temperature: 0, apiKey: c.env.OPENAI_API_KEY, streaming: true })
 
     const retriever = vectorStore.asRetriever()
 
     // const chain = RetrievalQAChain.fromLLM(llm, retriever)
+
+    // const chaindd = await createHistoryAwareRetriever({
+    //     llm,
+    //     retriever,
+    //     rephrasePrompt,
+    // })
+    // const resultdd = await chaindd.invoke({ input: '...', chat_history: [] })
 
     const chain = new RetrievalQAChain({
         returnSourceDocuments: true,
