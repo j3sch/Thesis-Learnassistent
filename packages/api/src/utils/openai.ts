@@ -1,11 +1,11 @@
 import { Context } from 'hono'
-import OpenAI from 'openai'
+import { createOpenAI, OpenAIProvider } from '@ai-sdk/openai'
 
-let openai: OpenAI
+let openai: OpenAIProvider
 
 export function initOpenAi(c: Context) {
     if (!openai) {
-        openai = new OpenAI({
+        const openai = createOpenAI({
             apiKey: c.env.OPENAI_API_KEY,
         })
         return openai

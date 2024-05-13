@@ -1,11 +1,11 @@
 import { Context } from 'hono'
-import OpenAI from 'openai'
+import { createOpenAI, OpenAIProvider } from '@ai-sdk/openai'
 
-let together: OpenAI
+let together: OpenAIProvider
 
 export function initTogether(c: Context) {
     if (!together) {
-        together = new OpenAI({
+        together = createOpenAI({
             apiKey: c.env.TOGETHER_API_KEY,
             baseURL: 'https://api.together.xyz/v1',
         })

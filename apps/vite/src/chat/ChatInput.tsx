@@ -1,31 +1,41 @@
 import { Button, Form, Input, XStack, YStack } from 'tamagui'
 import { SendHorizontal } from '@tamagui/lucide-icons'
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { UseChatHelpers } from 'ai/react'
 import { useExerciseIndex } from '../atoms/exercise'
+import { useNavigate } from '@tanstack/react-router'
 
 export function ChatInput({ chat }: { chat: UseChatHelpers }) {
-    const { input, handleSubmit, handleInputChange } = chat
+    const { input, handleSubmit, handleInputChange, setMessages, append, data } = chat
     const inputRef = useRef<null>(null)
     const [exerciseIndex, setExerciseIndex] = useExerciseIndex()
-    // const handleSubmit = (e: any) => {
-    //     e.preventDefault()
-    //     if (answer.trim() === '') {
-    //         return
-    //     }
-    //     const body = {
-    //         text: answer,
-    //         type: 'user',
-    //     }
+    const navigate = useNavigate({ from: '/chat' })
+    const [isExerciseComplete, setIsExerciseComplete] = useState(false)
 
-    //     mutate(body, {
-    //         onSuccess: (data) => {
-    //             addChat
-    //         },
-    //     })
-    //     // send answer
-    //     setAnswer('')
-    // }
+    function handleNextExercise() {
+        setExerciseIndex(exerciseIndex + 1)
+        setMessages([])
+        setIsExerciseComplete(false)
+        if (exerciseIndex >= 9) {
+            setExerciseIndex(1)
+            navigate({ to: '/' })
+        }
+    }
+
+    function handleHint() {
+        append({ role: 'user', content: 'Gib mir ein Hinweis!' })
+    }
+
+    useEffect(() => {
+        if (!data || !data[0]) return
+
+        const obj = data[0]
+        if (typeof obj === 'object' && 'isCorrect' in obj) {
+            console.log('isCorrect', obj.isCorrect)
+            const isCorrect = JSON.parse(obj.isCorrect)
+            setIsExerciseComplete(isCorrect)
+        }
+    }, [data])
 
     return (
         <YStack
@@ -44,17 +54,17 @@ export function ChatInput({ chat }: { chat: UseChatHelpers }) {
                 <Button
                     variant='outlined'
                     //@ts-ignore
-                    onPress={handleSubmit}
                     size='$3.5'
+                    onPress={handleHint}
                     // icon={isLoading ? <Spinner color={'$zinc50'} /> : <SendHorizontal size={'$1'} />}
                 >
                     Gib mir ein Hinweis
                 </Button>
                 <Button
-                    onPressOut={() => setExerciseIndex(exerciseIndex + 1)}
-                    variant='outlined'
+                    onPress={handleNextExercise}
+                    variant={'outlined'}
+                    theme={isExerciseComplete ? 'green' : 'dark'}
                     //@ts-ignore
-                    onPress={handleSubmit}
                     size='$3.5'
                     // icon={isLoading ? <Spinner color={'$zinc50'} /> : <SendHorizontal size={'$1'} />}
                 >
@@ -64,6 +74,7 @@ export function ChatInput({ chat }: { chat: UseChatHelpers }) {
             <Form
                 flexDirection='row'
                 //@ts-ignore
+
                 onSubmit={handleSubmit}
                 mx='auto'
                 width={'100%'}
@@ -72,6 +83,7 @@ export function ChatInput({ chat }: { chat: UseChatHelpers }) {
                 gap='$2'
             >
                 <Input
+                    autoFocus
                     backgroundColor={'$background'}
                     ref={inputRef}
                     flex={1}
@@ -83,7 +95,8 @@ export function ChatInput({ chat }: { chat: UseChatHelpers }) {
                     value={input}
                     //@ts-ignore
                     onChange={handleInputChange}
-                    // onSubmitEditing={handleSubmit}
+                    //@ts-ignore
+                    onSubmitEditing={handleSubmit}
                     // onKeyPress={(e) => {
                     //     if (e.nativeEvent.key === 'Enter') {
                     //         handleSubmit(e)
