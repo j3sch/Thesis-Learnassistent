@@ -70,15 +70,25 @@ user message: ${user_message}
 Solution: ${solution}
 `
 
-const isAnswerCorrectPrompt = (solution: string, chat_history: string, user_message: string) => `
-You are a German Gemeinschaftskunde teacher. Review the provided chat history between you and your student, along with the solution to the question.
-Your task is to decide if the user has answered the main idea of the question correctly. Answer with "Yes" if the user has answered correctly, otherwise answer with "No".
+// const isAnswerCorrectPrompt = (solution: string, chat_history: string, user_message: string) => `
+// You are a German Gemeinschaftskunde teacher. Review the provided chat history between you and your student, along with the solution to the question.
+// Your task is to decide if the user has answered the main idea of the question correctly. Answer with "Yes" if the user has answered correctly, otherwise answer with "No".
 
-Solution: ${solution}
+// Solution: ${solution}
 
-Current conversation: ${chat_history}
+// Current conversation: ${chat_history}
 
-user: ${user_message}
+// user: ${user_message}
+// `
+
+const isAnswerCorrectPrompt = (user_message: string, feedback: string) => `
+You are provided with a user message and the feedback from the teacher.
+Your task is to review the feedback to check whether the user has done the exercise correctly or when the teacher has given the solution.
+Answer with "Yes" if the user has done the exercise correctly or has received the feedback, otherwise answer with "No".
+
+User: ${user_message}
+
+Feedback: ${feedback}
 `
 
 const giveFeedbackPrompt = (
@@ -140,8 +150,8 @@ assistantSse.post('/', async (c: CustomContext): Promise<any> => {
 
     const { text } = await generateText({
         // model: together('mistralai/Mixtral-8x22B-Instruct-v0.1'),
-        model: together('meta-llama/Llama-3-70b-chat-hf'),
-        // model: openai('gpt-3.5-turbo'),
+        // model: together('meta-llama/Llama-3-70b-chat-hf'),
+        model: openai('gpt-4-turbo'),
         temperature: 0,
         messages: [
             {
@@ -172,37 +182,6 @@ assistantSse.post('/', async (c: CustomContext): Promise<any> => {
     console.log(isSolutionEnough)
 
     if (isSolutionEnough) {
-        const streamData = new StreamData()
-
-        const { text } = await generateText({
-            // model: together('mistralai/Mixtral-8x22B-Instruct-v0.1'),
-            model: together('meta-llama/Llama-3-70b-chat-hf'),
-            // model: openai('gpt-3.5-turbo'),
-            temperature: 0,
-            messages: [
-                {
-                    role: 'system',
-                    content: isAnswerCorrectPrompt(solution, formattedPreviousMessages.join('\n'), user_message),
-                },
-            ],
-        })
-
-        const isAnswerCorrectLowerCase = text?.toLowerCase()
-
-        if (isAnswerCorrectLowerCase) {
-            const isAnswerCorrect = isAnswerCorrectLowerCase.includes('yes')
-            console.log('is answer correct?', isAnswerCorrect)
-            streamData.append({
-                isCorrect: isAnswerCorrect,
-            })
-        } else {
-            streamData.append({
-                isCorrect: false,
-            })
-        }
-
-        streamData.close()
-
         const giveFeedbackRes = await streamText({
             // model: together('mistralai/Mixtral-8x22B-Instruct-v0.1'),
             // model: together('meta-llama/Llama-3-70b-chat-hf'),
@@ -211,17 +190,49 @@ assistantSse.post('/', async (c: CustomContext): Promise<any> => {
             messages: [{ role: 'system', content: giveFeedbackPrompt(solution) }, ...messages_with_question],
         })
 
+        let feedbackResult = ''
+
+        const streamData = new StreamData()
+
         const stream = giveFeedbackRes.toAIStream({
-            onFinal(_) {
-                streamData.close()
+            onText(text) {
+                console.log(text)
+                feedbackResult += text
+            },
+            async onFinal(_) {
+                console.log(feedbackResult)
+                const { text } = await generateText({
+                    // model: together('mistralai/Mixtral-8x22B-Instruct-v0.1'),
+                    model: together('meta-llama/Llama-3-70b-chat-hf'),
+                    // model: openai('gpt-3.5-turbo'),
+                    temperature: 0,
+                    messages: [
+                        {
+                            role: 'system',
+                            content: isAnswerCorrectPrompt(user_message, feedbackResult),
+                        },
+                    ],
+                })
+
+                const isAnswerCorrectLowerCase = text?.toLowerCase()
+
+                if (isAnswerCorrectLowerCase) {
+                    const isAnswerCorrect = isAnswerCorrectLowerCase.includes('yes')
+                    console.log('is answer correct?', isAnswerCorrect)
+                    streamData.append({
+                        isCorrect: isAnswerCorrect,
+                    })
+                    streamData.close()
+                } else {
+                    streamData.append({
+                        isCorrect: false,
+                    })
+                    streamData.close()
+                }
             },
         })
 
         return new StreamingTextResponse(stream, {}, streamData)
-        // // Convert the response into a friendly text-stream
-        // const stream = OpenAIStream(giveFeedbackRes)
-
-        // return new StreamingTextResponse(stream, {}, streamData)
     }
 
     if (!isSolutionEnough) {
