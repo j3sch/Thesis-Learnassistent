@@ -33,7 +33,7 @@ export function ChatScreen() {
 
     return (
         <>
-            <Header />
+            <Header exerciseIndex={exerciseIndex} />
             <ChatScrollView chat={chat} />
             <ChatInput chat={chat} />
         </>
