@@ -34,7 +34,7 @@ export const InfoButtomSheet = (): React.ReactNode => {
             >
                 <Sheet.Overlay
                     backgroundColor={'$color1'}
-                    animation='lazy'
+                    animation='quick'
                     enterStyle={{ opacity: 0 }}
                     exitStyle={{ opacity: 0 }}
                 />

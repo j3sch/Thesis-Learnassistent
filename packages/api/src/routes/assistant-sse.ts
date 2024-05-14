@@ -37,6 +37,7 @@ type SseBindings = {
     OPENAI_API_KEY: string
     TOGETHER_API_KEY: string
     DB: D1Database
+    PERPLEXITY_API_KEY: string
 }
 // - If the provided 'User message' is an answer to the provided 'Question', then answer with 'Answer'.
 
@@ -99,26 +100,24 @@ Answer with "Yes" if the user's message is a question, otherwise answer with "No
 User's message: ${user_message}
 `
 
-const isSolutionEnoughPrompt = (user_message: string, solution: string) => `
-You are provided with a german question and text. Your task is to decide if the information in the text is enough to answer the question.
-Answer with "Yes" if the information is enough, otherwise answer with "No".
+const isSolutionEnoughPrompt = (solution: string) => `
+You are provided with the Chat History between you and your student and the Solution to the Question. The Question is the first message in the chat history.
+Your task is to decide if the information in the provided solution in enough to give feedback to the user. 
+Answer with "Yes" if the information is enough, otherwise answer with "No". Don't try to make up an answer.
 
-Question: ${user_message}
-
-Text: ${solution}
+Solution: ${solution}
 `
 
 const giveFeedbackPrompt = (
     solution: string
-) => `You are a german Gemeinschaftskunde teacher. You are only allowed to use provided information. You are not allowed to make up an answer on your own. You should avoid repeating yourself.
+) => `You are a German Gemeinschaftskunde teacher for the 8th class. Please speak in a clear and simple manner that is appropriate for addressing 8th-grade students. You are only allowed to use provided information. You are not allowed to make up an answer on your own. You should avoid repeating yourself.
 
-You are provided with the Chat History between you and your student and the Solution to the Question. The student should answer the question correctly. 
-If the user has correctly answered the main idea of the question, he has answered correctly.
-Your task is to give your student feedback. The feedback should be educational and supportive, aimed at helping the user to understand the topic. But you shouldn't reveal the solution straight away. You should lead the student slowly to the solution by giving hints. The hints must be based on the information provided by the solution. 
-You can ask questions to check your understanding to the question, but these questions must be able to be answered with the provided solution.
-Your answer shouldn't be longer than 5 sentences.
-- If you think your student is stuck, give him the solution. 
-- If the user has correctly answered the main idea of the question then say only once "Hast du noch weitere Fragen?" after the last sentence.
+You are provided with the Chat History between you and your student and the Solution to the Question. The Question is the first message in the chat history.
+Your task is to compare the student's answer with the provided solution to check if he has answered the question correctly.  
+Provide educational and supportive feedback, leading the student to the solution with hints based on the provided solution. 
+Ask questions to check understanding, but ensure they can be answered with the provided solution.
+If the student has answered the main idea of the question correctly, then give positive feedback. So that the student know he answered correctly. 
+Keep your feedback concise, no longer than 5 sentences. If the student is stuck, give the solution. 
 
 Always speek directly to the student. Answer in German.
 
@@ -193,8 +192,9 @@ assistantSse.post('/', async (c: CustomContext): Promise<any> => {
             messages: [
                 {
                     role: 'system',
-                    content: isSolutionEnoughPrompt(user_message, solution),
+                    content: isSolutionEnoughPrompt(solution),
                 },
+                ...messages_with_question,
             ],
         })
         isSolutionEnough = doesResContainYes(isSolutionEnoughRes)
@@ -204,7 +204,7 @@ assistantSse.post('/', async (c: CustomContext): Promise<any> => {
         const giveFeedbackRes = await streamText({
             // model: together('mistralai/Mixtral-8x22B-Instruct-v0.1'),
             // model: together('meta-llama/Llama-3-70b-chat-hf'),
-            model: openai('gpt-3.5-turbo'),
+            model: openai('gpt-4o'),
             temperature: 0.2,
             messages: [{ role: 'system', content: giveFeedbackPrompt(solution) }, ...messages_with_question],
         })
@@ -222,8 +222,8 @@ assistantSse.post('/', async (c: CustomContext): Promise<any> => {
                 console.log(feedbackResult)
                 const { text } = await generateText({
                     // model: together('mistralai/Mixtral-8x22B-Instruct-v0.1'),
-                    model: together('meta-llama/Llama-3-70b-chat-hf'),
-                    // model: openai('gpt-3.5-turbo'),
+                    // model: together('meta-llama/Llama-3-70b-chat-hf'),
+                    model: openai('gpt-4o'),
                     temperature: 0,
                     messages: [
                         {
@@ -268,7 +268,7 @@ assistantSse.post('/', async (c: CustomContext): Promise<any> => {
         const parser = new HttpResponseOutputParser()
 
         const llm = new ChatOpenAI({
-            model: 'gpt-3.5-turbo',
+            model: 'gpt-4o',
             temperature: 0.2,
             apiKey: c.env.OPENAI_API_KEY,
             streaming: true,

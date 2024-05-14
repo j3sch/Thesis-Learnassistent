@@ -1,20 +1,14 @@
-import { ExerciseTable, SourceTable } from './../db/schema'
 import { Hono } from 'hono'
 import { CustomContext } from '@t4/types'
 import { OpenAIEmbeddings, ChatOpenAI } from '@langchain/openai'
 import { CheerioWebBaseLoader } from 'langchain/document_loaders/web/cheerio'
 import { RetrievalQAChain, loadQAStuffChain } from 'langchain/chains'
 import { PromptTemplate } from '@langchain/core/prompts'
-import { createClient } from '@supabase/supabase-js'
 import { SupabaseVectorStore } from '@langchain/community/vectorstores/supabase'
 import { generateQAPairs } from '../utils/generate_qa_pairs'
-import { createHistoryAwareRetriever } from 'langchain/chains/history_aware_retriever'
 import { BasePromptTemplate } from '@langchain/core/prompts'
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter'
 import { initSupabase } from '../utils/supabase'
-import { generateMetaData } from '../utils/generateMetaData'
-import { createDb } from '../db/client'
-import { eq } from 'drizzle-orm'
 
 export type Bindings = {
     OPENAI_API_KEY: string
@@ -22,6 +16,7 @@ export type Bindings = {
     SUPABASE_URL: string
     TOGETHER_API_KEY: string
     DB: D1Database
+    PERPLEXITY_API_KEY: string
 }
 
 export const notes = new Hono<{ Bindings: Bindings }>()
@@ -33,17 +28,6 @@ const promptTemplate = `Use the following pieces of context to answer the questi
 Question: {question}
 Answer in German:`
 
-// const promptTemplate = `Is the requested Information in the following context? Answer with Yes or No!.
-
-// {context}
-
-const rephrasePrompt = `Du bist ein Gemeinschaftskundenlehrer
-
-Chat History: {chat_history}
-User Input: {input}` as unknown as BasePromptTemplate<any>
-
-// Question: {question}
-// Answer in German:`
 const prompt = PromptTemplate.fromTemplate(promptTemplate)
 
 notes.post('/', async (c: CustomContext) => {
@@ -68,15 +52,6 @@ notes.post('/', async (c: CustomContext) => {
     })
 
     await generateQAPairs(docs, c, url)
-
-    // const splitter = RecursiveCharacterTextSplitter.fromLanguage('html', {
-    //     chunkSize: 1000,
-    //     chunkOverlap: 100,
-    // })
-    // const transformer = new HtmlToTextTransformer()
-    // const sequence = splitter.pipe(transformer)
-    // const newDocuments = await sequence.invoke(docs)
-    // console.log(JSON.stringify(newDocuments))
 
     const embeddings = new OpenAIEmbeddings({
         apiKey: c.env.OPENAI_API_KEY,
@@ -115,15 +90,6 @@ notes.get('/', async (c: CustomContext) => {
     const llm = new ChatOpenAI({ model: 'gpt-4-turbo', temperature: 0, apiKey: c.env.OPENAI_API_KEY, streaming: true })
 
     const retriever = vectorStore.asRetriever()
-
-    // const chain = RetrievalQAChain.fromLLM(llm, retriever)
-
-    // const chaindd = await createHistoryAwareRetriever({
-    //     llm,
-    //     retriever,
-    //     rephrasePrompt,
-    // })
-    // const resultdd = await chaindd.invoke({ input: '...', chat_history: [] })
 
     const chain = new RetrievalQAChain({
         returnSourceDocuments: true,

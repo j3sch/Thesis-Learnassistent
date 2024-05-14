@@ -1,7 +1,7 @@
 import { UseIsInfoSheetOpen } from '@/atoms/infoSheet'
 import { ArrowLeft, Info } from '@tamagui/lucide-icons'
 import { XStack, Button, YStack } from 'tamagui'
-
+import { Link } from '@tanstack/react-router'
 interface Props {
     exerciseIndex: number
 }
@@ -33,7 +33,9 @@ export function Header(props: Props) {
                     alignItems='center'
                     gap='$5'
                 >
-                    <Button circular size='$4' icon={<ArrowLeft />} />
+                    <Link to='/'>
+                        <Button circular size='$4' icon={<ArrowLeft />} />
+                    </Link>
                     <XStack
                         flex={1}
                         maxWidth={500}
