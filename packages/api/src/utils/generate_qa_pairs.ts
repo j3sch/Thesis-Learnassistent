@@ -2,14 +2,22 @@ import { createDb } from './../db/client'
 import { CustomContext } from '@t4/types'
 import { Document } from 'langchain/document'
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter'
-import Groq from 'groq-sdk'
 import { generateQAPromptMessages } from './prompt'
-import { DrizzleD1Database } from 'drizzle-orm/d1'
-import { ExerciseTable } from '../db/schema'
-import { ChatCompletionAssistantMessageParam } from 'openai/resources'
+import { ExerciseTable, SourceTable } from '../db/schema'
 import { initTogether } from './together'
+import { generateMetaData } from './generateMetaData'
+import { generateText } from 'ai'
+import { initOpenAi } from './openai'
 
-export async function generateQAPairs(docs: Document[], c: CustomContext) {
+export async function generateQAPairs(docs: Document[], c: CustomContext, url: string) {
+    const metadata = (await generateMetaData(url, c)) as {
+        title?: string
+        author?: string
+        date?: string
+        publisher?: string
+        url: string
+    }
+
     const textSplitter = new RecursiveCharacterTextSplitter({
         chunkSize: 2000,
         chunkOverlap: 250,
@@ -30,7 +38,7 @@ export async function generateQAPairs(docs: Document[], c: CustomContext) {
     // })
 
     const together = initTogether(c)
-
+    const openai = initOpenAi(c)
     const db = createDb(c.env.DB)
 
     for (const doc of cleanedDocs) {
@@ -39,30 +47,25 @@ export async function generateQAPairs(docs: Document[], c: CustomContext) {
 
             console.log(doc.pageContent)
 
-            const chatCompletion = await together.chat.completions.create({
-                messages: [
-                    ...(generateQAPromptMessages as ChatCompletionAssistantMessageParam[]),
-                    { role: 'user', content: doc.pageContent },
-                ],
-                model: 'meta-llama/Llama-3-70b-chat-hf',
-                // model: 'mistralai/Mixtral-8x22B-Instruct-v0.1',
+            const { text } = await generateText({
+                // model: together('mistralai/Mixtral-8x22B-Instruct-v0.1'),
+                // model: together('meta-llama/Llama-3-70b-chat-hf'),
+                model: openai('gpt-3.5-turbo'),
                 temperature: 0.2,
-                stream: false,
+                messages: [...(generateQAPromptMessages as []), { role: 'user', content: doc.pageContent }],
             })
 
-            const content = chatCompletion.choices[0]?.message?.content
+            if (!text) continue
 
-            if (!content) continue
-
-            const startIndex = content.indexOf('{')
-            const endIndex = content.lastIndexOf('}') + 1 // +1, um das schließende } mit einzubeziehen
+            const startIndex = text.indexOf('{')
+            const endIndex = text.lastIndexOf('}') + 1 // +1, um das schließende } mit einzubeziehen
 
             if (startIndex === -1) {
                 console.log('Skip - Content not suitable')
                 continue
             }
 
-            const jsonString = content.substring(startIndex, endIndex)
+            const jsonString = text.substring(startIndex, endIndex)
 
             console.log(jsonString)
 
@@ -74,12 +77,28 @@ export async function generateQAPairs(docs: Document[], c: CustomContext) {
             const newExercise = {
                 question: qa.question,
                 answer: qa.answer,
-                source: doc.metadata.source,
             }
 
             console.log(newExercise)
 
-            await db.insert(ExerciseTable).values(newExercise).run()
+            const source = await db
+                .insert(SourceTable)
+                .values({
+                    title: metadata.title,
+                    author: metadata.author,
+                    date: metadata.date,
+                    publisher: metadata.publisher,
+                    url,
+                })
+                .returning()
+
+            const exercise = await db
+                .insert(ExerciseTable)
+                .values({
+                    ...newExercise,
+                    source: source[0].id,
+                })
+                .returning()
 
             console.log('--------------------------------------------')
 

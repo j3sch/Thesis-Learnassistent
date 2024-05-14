@@ -1,3 +1,4 @@
+import { ExerciseTable, SourceTable } from './../db/schema'
 import { Hono } from 'hono'
 import { CustomContext } from '@t4/types'
 import { OpenAIEmbeddings, ChatOpenAI } from '@langchain/openai'
@@ -11,6 +12,9 @@ import { createHistoryAwareRetriever } from 'langchain/chains/history_aware_retr
 import { BasePromptTemplate } from '@langchain/core/prompts'
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter'
 import { initSupabase } from '../utils/supabase'
+import { generateMetaData } from '../utils/generateMetaData'
+import { createDb } from '../db/client'
+import { eq } from 'drizzle-orm'
 
 export type Bindings = {
     OPENAI_API_KEY: string
@@ -63,7 +67,7 @@ notes.post('/', async (c: CustomContext) => {
         return doc
     })
 
-    await generateQAPairs(docs, c)
+    await generateQAPairs(docs, c, url)
 
     // const splitter = RecursiveCharacterTextSplitter.fromLanguage('html', {
     //     chunkSize: 1000,

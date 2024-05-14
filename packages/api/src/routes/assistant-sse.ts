@@ -31,6 +31,7 @@ import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts
 import { StringOutputParser } from '@langchain/core/output_parsers'
 import { AIMessage, HumanMessage } from '@langchain/core/messages'
 import { StreamData } from 'ai'
+import { doesResContainYes } from '../utils/doesResContainYes'
 
 type SseBindings = {
     OPENAI_API_KEY: string
@@ -91,6 +92,22 @@ User: ${user_message}
 Feedback: ${feedback}
 `
 
+const isUserMessageAQuestionPrompt = (user_message: string) => `
+You are provided with a german user message. Your task is to decide if the user's message is a question.
+Answer with "Yes" if the user's message is a question, otherwise answer with "No".
+
+User's message: ${user_message}
+`
+
+const isSolutionEnoughPrompt = (user_message: string, solution: string) => `
+You are provided with a german question and text. Your task is to decide if the information in the text is enough to answer the question.
+Answer with "Yes" if the information is enough, otherwise answer with "No".
+
+Question: ${user_message}
+
+Text: ${solution}
+`
+
 const giveFeedbackPrompt = (
     solution: string
 ) => `You are a german Gemeinschaftskunde teacher. You are only allowed to use provided information. You are not allowed to make up an answer on your own. You should avoid repeating yourself.
@@ -148,40 +165,42 @@ assistantSse.post('/', async (c: CustomContext): Promise<any> => {
     const previousMessages = messages_with_question.slice(0, -1)
     const formattedPreviousMessages = messages_with_question.slice(0, -1).map(formatMessage)
 
-    const { text } = await generateText({
+    const { text: isUserMessageAQuestionRes } = await generateText({
         // model: together('mistralai/Mixtral-8x22B-Instruct-v0.1'),
         // model: together('meta-llama/Llama-3-70b-chat-hf'),
-        model: openai('gpt-4-turbo'),
+        model: openai('gpt-4o'),
         temperature: 0,
         messages: [
             {
                 role: 'system',
-                content: canBeAnsweredBasedOnContextPrompt(
-                    solution,
-                    formattedPreviousMessages.join('\n'),
-                    user_message
-                ),
+                content: isUserMessageAQuestionPrompt(user_message),
             },
         ],
     })
 
-    const canBeAnsweredBasedOnContext = text?.toLowerCase()
+    const isUserMessageAQuestion = doesResContainYes(isUserMessageAQuestionRes)
 
-    console.log('is solution enough?', canBeAnsweredBasedOnContext)
+    console.log('is user message a question?', isUserMessageAQuestion)
 
-    let isSolutionEnough
+    let isSolutionEnough = false
 
-    if (!canBeAnsweredBasedOnContext) {
-        console.log("Couldn't determine if llm can answer based on solution")
-        isSolutionEnough = true
-    } else {
-        console.log(canBeAnsweredBasedOnContext)
-        isSolutionEnough = canBeAnsweredBasedOnContext.includes('yes')
+    if (isUserMessageAQuestion) {
+        const { text: isSolutionEnoughRes } = await generateText({
+            // model: together('mistralai/Mixtral-8x22B-Instruct-v0.1'),
+            // model: together('meta-llama/Llama-3-70b-chat-hf'),
+            model: openai('gpt-4o'),
+            temperature: 0,
+            messages: [
+                {
+                    role: 'system',
+                    content: isSolutionEnoughPrompt(user_message, solution),
+                },
+            ],
+        })
+        isSolutionEnough = doesResContainYes(isSolutionEnoughRes)
     }
 
-    console.log(isSolutionEnough)
-
-    if (isSolutionEnough) {
+    if (!isUserMessageAQuestion || isSolutionEnough) {
         const giveFeedbackRes = await streamText({
             // model: together('mistralai/Mixtral-8x22B-Instruct-v0.1'),
             // model: together('meta-llama/Llama-3-70b-chat-hf'),

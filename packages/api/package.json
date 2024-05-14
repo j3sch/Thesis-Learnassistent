@@ -23,7 +23,7 @@
     "@langchain/openai": "^0.0.28",
     "@supabase/supabase-js": "^2.43.1",
     "@trpc/server": "^10.43.2",
-    "ai": "^3.1.5",
+    "ai": "^3.1.7",
     "cheerio": "^1.0.0-rc.12",
     "drizzle-orm": "^0.29.0",
     "drizzle-valibot": "beta",

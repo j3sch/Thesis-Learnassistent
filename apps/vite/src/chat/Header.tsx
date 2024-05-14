@@ -1,4 +1,5 @@
-import { ArrowLeft } from '@tamagui/lucide-icons'
+import { UseIsInfoSheetOpen } from '@/atoms/infoSheet'
+import { ArrowLeft, Info } from '@tamagui/lucide-icons'
 import { XStack, Button, YStack } from 'tamagui'
 
 interface Props {
@@ -7,6 +8,7 @@ interface Props {
 
 export function Header(props: Props) {
     const { exerciseIndex } = props
+    const [open, setOpen] = UseIsInfoSheetOpen()
 
     return (
         <header>
@@ -23,7 +25,14 @@ export function Header(props: Props) {
                 paddingHorizontal='$3.5'
                 justifyContent='center'
             >
-                <XStack width='100%' height={'100%'} maxWidth={768} alignItems='center' gap='$5'>
+                <XStack
+                    width='100%'
+                    height={'100%'}
+                    maxWidth={768}
+                    justifyContent='space-evenly'
+                    alignItems='center'
+                    gap='$5'
+                >
                     <Button circular size='$4' icon={<ArrowLeft />} />
                     <XStack
                         flex={1}
@@ -35,6 +44,7 @@ export function Header(props: Props) {
                     >
                         <XStack width={`${exerciseIndex * 10}%`} backgroundColor={'#3CB179'} borderRadius={'$10'} />
                     </XStack>
+                    <Button circular size='$4' onPress={() => setOpen(true)} icon={<Info />} />
                 </XStack>
             </YStack>
         </header>

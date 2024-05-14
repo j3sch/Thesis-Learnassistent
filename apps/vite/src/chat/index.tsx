@@ -4,6 +4,7 @@ import { Header } from './Header'
 import { useChat } from 'ai/react'
 import { useExerciseIndex } from '@/atoms/exercise'
 import { useEffect, useState } from 'react'
+import { InfoButtomSheet } from './InfoButtomSheet'
 
 export function ChatScreen() {
     const [exerciseIndex] = useExerciseIndex()
@@ -36,6 +37,7 @@ export function ChatScreen() {
             <Header exerciseIndex={exerciseIndex} />
             <ChatScrollView chat={chat} />
             <ChatInput chat={chat} />
+            <InfoButtomSheet />
         </>
     )
 }
