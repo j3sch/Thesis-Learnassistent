@@ -13,9 +13,9 @@ function Index() {
         gap: '1rem',
       }}
     >
-      <Link to='/' className='[&.active]:font-bold'>
-        Home
-      </Link>{' '}
+      <Link to='/flashcard' className='[&.active]:font-bold'>
+        Flashcard
+      </Link>
       <Link to='/chat' className='[&.active]:font-bold'>
         Chat
       </Link>

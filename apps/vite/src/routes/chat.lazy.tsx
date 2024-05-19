@@ -1,15 +1,15 @@
 import { createLazyFileRoute } from '@tanstack/react-router'
-import { ChatWrapper } from '../chat/WebWrapper'
-import { ChatScreen } from '../chat'
+import { WebWrapper } from '@/features/chat/WebWrapper'
+import { ChatScreen } from '@/features/chat'
 
 export const Route = createLazyFileRoute('/chat')({
-  component: About,
+  component: Chat,
 })
 
-function About() {
+function Chat() {
   return (
-    <ChatWrapper>
+    <WebWrapper>
       <ChatScreen />
-    </ChatWrapper>
+    </WebWrapper>
   )
 }

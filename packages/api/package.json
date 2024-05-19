@@ -34,6 +34,7 @@
     "miniflare": "3.20231025.1",
     "openai": "^4.44.0",
     "superjson": "1.13.3",
+    "ts-fsrs": "^3.5.7",
     "valibot": "^0.20.1"
   },
   "devDependencies": {

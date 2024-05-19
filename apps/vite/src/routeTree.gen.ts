@@ -16,10 +16,16 @@ import { Route as rootRoute } from './routes/__root'
 
 // Create Virtual Routes
 
+const FlashcardLazyImport = createFileRoute('/flashcard')()
 const ChatLazyImport = createFileRoute('/chat')()
 const IndexLazyImport = createFileRoute('/')()
 
 // Create/Update Routes
+
+const FlashcardLazyRoute = FlashcardLazyImport.update({
+  path: '/flashcard',
+  getParentRoute: () => rootRoute,
+} as any).lazy(() => import('./routes/flashcard.lazy').then((d) => d.Route))
 
 const ChatLazyRoute = ChatLazyImport.update({
   path: '/chat',
@@ -43,11 +49,15 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatLazyImport
       parentRoute: typeof rootRoute
     }
+    '/flashcard': {
+      preLoaderRoute: typeof FlashcardLazyImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
 // Create and export the route tree
 
-export const routeTree = rootRoute.addChildren([IndexLazyRoute, ChatLazyRoute])
+export const routeTree = rootRoute.addChildren([IndexLazyRoute, ChatLazyRoute, FlashcardLazyRoute])
 
 /* prettier-ignore-end */
