@@ -1,20 +1,12 @@
 import { Hono } from 'hono'
-import OpenAI from 'openai'
 import { CustomContext } from '@t4/types'
-import { DrizzleD1Database } from 'drizzle-orm/d1'
 import { ExerciseTable } from '../db/schema'
 import { eq } from 'drizzle-orm'
 import { initTogether } from '../utils/together'
 import { createDb } from '../db/client'
 import { OpenAIEmbeddings, ChatOpenAI } from '@langchain/openai'
-import { RetrievalQAChain, loadQAStuffChain } from 'langchain/chains'
 import { SupabaseVectorStore } from '@langchain/community/vectorstores/supabase'
 import { initSupabase } from '../utils/supabase'
-import { PromptTemplate } from '@langchain/core/prompts'
-import { createRetrievalChain } from 'langchain/chains/retrieval'
-import { pull } from 'langchain/hub'
-import { createStuffDocumentsChain } from 'langchain/chains/combine_documents'
-import { BytesOutputParser } from 'langchain/schema/output_parser'
 import { RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables'
 import { formatDocumentsAsString } from 'langchain/util/document'
 import { HttpResponseOutputParser } from 'langchain/output_parsers'
@@ -23,7 +15,6 @@ import {
   Message as VercelChatMessage,
   StreamingTextResponse,
   createStreamDataTransformer,
-  OpenAIStream,
   generateText,
   streamText,
 } from 'ai'
@@ -32,6 +23,9 @@ import { StringOutputParser } from '@langchain/core/output_parsers'
 import { AIMessage, HumanMessage } from '@langchain/core/messages'
 import { StreamData } from 'ai'
 import { doesResContainYes } from '../utils/doesResContainYes'
+import { initAnthropic } from '../utils/anthropic'
+import { initPerplexity } from '../utils/perplexity'
+import { giveFeedbackPrompt } from '../prompts/feedbackPrompt'
 
 type SseBindings = {
   OPENAI_API_KEY: string
@@ -76,6 +70,8 @@ user message: ${user_message}
 Solution: ${solution}
 `
 
+const wrongAnswerExample = []
+
 // const isAnswerCorrectPrompt = (solution: string, chat_history: string, user_message: string) => `
 // You are a German Gemeinschaftskunde teacher. Review the provided chat history between you and your student, along with the solution to the question.
 // Your task is to decide if the user has answered the main idea of the question correctly. Answer with "Yes" if the user has answered correctly, otherwise answer with "No".
@@ -87,43 +83,48 @@ Solution: ${solution}
 // user: ${user_message}
 // `
 
-const isAnswerCorrectPrompt = (user_message: string, feedback: string) => `
-You are provided with a user message and the feedback from the teacher.
-Your task is to review the feedback to check whether the user has done the exercise correctly or when the teacher has given the solution.
-Answer with "Yes" if the user has done the exercise correctly or has received the feedback, otherwise answer with "No".
+const isAnswerCorrectPrompt = (question: string, solution: string) => `
+You are only allowed to answer with "true" or "false".
+Don't try to give the user feedback. 
+You are provided with the Question, the Solution to the Question and the Chat-History between you and your student.
 
-User: ${user_message}
+Use the following steps to respond to user inputs. Fully restate each step before proceeding.
 
-Feedback: ${feedback}
-`
+Step 1. Look for keywords in the feedback from the tutor:
+- If the tutor says something like "nicht ganz korrekt/richtig" then answer with "false".
+- If the tutor says something like "ist ein guter Anfang" then answer with "false".
+- If the tutor says something like "ist richtig/korrekt" or "sehr gut/gut gemacht" then answer with "true".
 
-const isUserMessageAQuestionPrompt = (user_message: string) => `
-You are provided with a german user message. Your task is to decide if the user's message is a question.
-Answer with "Yes" if the user's message is a question, otherwise answer with "No".
+If none of the above keywords are present, then continue to step 2.
 
-User's message: ${user_message}
-`
+Step 2. Check if user has answered the question correctly:
+- If the user has not answered the question correctly or has not received the feedback, answer with "false".
+- If the user has answered the question correctly or has received the feedback, answer with "true".
 
-const isSolutionEnoughPrompt = (solution: string) => `
-You are provided with the Chat History between you and your student and the Solution to the Question. The Question is the first message in the chat history.
-Your task is to decide if the information in the provided solution in enough to give feedback to the user. 
-Answer with "Yes" if the information is enough, otherwise answer with "No". Don't try to make up an answer.
+Question: ${question}
 
 Solution: ${solution}
 `
 
-const giveFeedbackPrompt = (solution: string) => `You are a German Gemeinschaftskunde teacher for the 8th class. Please speak in a clear and simple manner that is appropriate for addressing 8th-grade students. You are only allowed to use provided information. You are not allowed to make up an answer on your own. You should avoid repeating yourself.
+// Your task is to review the Chat-History critically to check whether the user has answered the question correctly or when the tutor has given the solution.
+// Answer with "true" if the user has answered the question correctly or has received the feedback, otherwise answer with "false".
 
-You are provided with the Chat History between you and your student and the Solution to the Question. The Question is the first message in the chat history.
-Your task is to compare the student's answer with the provided solution to check if he has answered the question correctly.  
-Provide educational and supportive feedback, leading the student to the solution with hints based on the provided solution. 
-Ask questions to check understanding, but ensure they can be answered with the provided solution.
-If the student has answered the main idea of the question correctly, then give positive feedback. So that the student know he answered correctly. 
-Keep your feedback concise, no longer than 5 sentences. If the student is stuck, give the solution. 
+const isUserMessageAQuestionPrompt = () => `
+You are provided with a german user message. Your task is to decide if the user's message is a question.
+Answer with "Yes" if the user's message is a question, otherwise answer with "No".
+`
 
-Always speek directly to the student. Answer in German.
+const isSolutionEnoughPrompt = (question: string, solution: string) => `
+You are provided with the Question, the Solution to the Question and the Chat-History between you and your student
+Your task is to decide if the information in the provided solution in enough to give feedback to the user. 
+Answer with "Yes" if the information is enough, otherwise answer with "No". Don't try to make up an answer.
 
-Solution: ${solution}`
+Question: ${question}
+
+Solution: ${solution}
+`
+
+// - The feedback should be educational and supportive.
 
 // const promptTemplate = `Answer the user's message based only on the following context. If the answer is not in the context, reply politely that you do not have that information available.
 
@@ -150,6 +151,9 @@ export const assistantSse = new Hono<{ Bindings: SseBindings }>()
 assistantSse.post('/', async (c: CustomContext): Promise<any> => {
   const together = initTogether(c)
   const openai = initOpenAi(c)
+  const anthropic = initAnthropic(c)
+  const perplexity = initPerplexity(c)
+
   const { exercise_id, messages } = await c.req.json()
   console.log(exercise_id)
   console.log(messages[0].content)
@@ -170,16 +174,20 @@ assistantSse.post('/', async (c: CustomContext): Promise<any> => {
   const previousMessages = messages_with_question.slice(0, -1)
   const formattedPreviousMessages = messages_with_question.slice(0, -1).map(formatMessage)
 
+  console.log(messages[messages.length - 1])
+
   const { text: isUserMessageAQuestionRes } = await generateText({
     // model: together('mistralai/Mixtral-8x22B-Instruct-v0.1'),
     // model: together('meta-llama/Llama-3-70b-chat-hf'),
-    model: openai('gpt-4o'),
+    model: perplexity('llama-3-70b-instruct'),
+    // model: openai('gpt-4o'),
     temperature: 0,
     messages: [
       {
         role: 'system',
-        content: isUserMessageAQuestionPrompt(user_message),
+        content: isUserMessageAQuestionPrompt(),
       },
+      messages[messages.length - 1],
     ],
   })
 
@@ -193,29 +201,34 @@ assistantSse.post('/', async (c: CustomContext): Promise<any> => {
     const { text: isSolutionEnoughRes } = await generateText({
       // model: together('mistralai/Mixtral-8x22B-Instruct-v0.1'),
       // model: together('meta-llama/Llama-3-70b-chat-hf'),
-      model: openai('gpt-4o'),
+      model: perplexity('llama-3-70b-instruct'),
+      // model: openai('gpt-4o'),
       temperature: 0,
       messages: [
         {
           role: 'system',
-          content: isSolutionEnoughPrompt(solution),
+          content: isSolutionEnoughPrompt(question, solution),
         },
-        ...messages_with_question,
+        ...messages,
       ],
     })
     isSolutionEnough = doesResContainYes(isSolutionEnoughRes)
   }
 
+  console.log('is solution enough?', isSolutionEnough)
+
   if (!isUserMessageAQuestion || isSolutionEnough) {
     const giveFeedbackRes = await streamText({
       // model: together('mistralai/Mixtral-8x22B-Instruct-v0.1'),
       // model: together('meta-llama/Llama-3-70b-chat-hf'),
+      system: giveFeedbackPrompt(question, solution),
+      // model: anthropic('claude-3-sonnet-20240229'),
+      // model: perplexity('llama-3-70b-instruct'),
       model: openai('gpt-4o'),
+      // model: perplexity('llama-3-70b-instruct'),
+      // model: openai('gpt-4-turbo'),
       temperature: 0.2,
-      messages: [
-        { role: 'system', content: giveFeedbackPrompt(solution) },
-        ...messages_with_question,
-      ],
+      messages: messages,
     })
 
     let feedbackResult = ''
@@ -224,28 +237,31 @@ assistantSse.post('/', async (c: CustomContext): Promise<any> => {
 
     const stream = giveFeedbackRes.toAIStream({
       onText(text) {
-        console.log(text)
         feedbackResult += text
       },
       async onFinal(_) {
-        console.log(feedbackResult)
+        console.log('feedback:', feedbackResult)
         const { text } = await generateText({
           // model: together('mistralai/Mixtral-8x22B-Instruct-v0.1'),
           // model: together('meta-llama/Llama-3-70b-chat-hf'),
-          model: openai('gpt-4o'),
+          model: perplexity('llama-3-70b-instruct'),
+          // model: perplexity('mixtral-8x7b-instruct'),
+          // model: openai('gpt-4o'),
           temperature: 0,
           messages: [
             {
               role: 'system',
-              content: isAnswerCorrectPrompt(user_message, feedbackResult),
+              content: isAnswerCorrectPrompt(question, solution),
             },
+            ...messages,
           ],
         })
 
         const isAnswerCorrectLowerCase = text?.toLowerCase()
+        console.log('is answer correct? string', isAnswerCorrectLowerCase)
 
         if (isAnswerCorrectLowerCase) {
-          const isAnswerCorrect = isAnswerCorrectLowerCase.includes('yes')
+          const isAnswerCorrect = isAnswerCorrectLowerCase.includes('true')
           console.log('is answer correct?', isAnswerCorrect)
           streamData.append({
             isCorrect: isAnswerCorrect,
