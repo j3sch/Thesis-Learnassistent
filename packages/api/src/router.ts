@@ -1,9 +1,9 @@
-import { assistantRouter } from './routes/assistant'
+import { exerciseRouter } from './routes/exercise'
 
 import { router } from './trpc'
 
 export const appRouter = router({
-  assistant: assistantRouter,
+  exercise: exerciseRouter,
 })
 
 export type AppRouter = typeof appRouter

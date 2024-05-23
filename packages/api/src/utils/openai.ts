@@ -5,7 +5,7 @@ let openai: OpenAIProvider
 
 export function initOpenAi(c: Context) {
   if (!openai) {
-    const openai = createOpenAI({
+    openai = createOpenAI({
       apiKey: c.env.OPENAI_API_KEY,
     })
     return openai

@@ -1,7 +1,8 @@
 CREATE TABLE `Exercise` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`question` text NOT NULL,
-	`solution` text NOT NULL,
+	`answer` text NOT NULL,
+	`concise_answer` text NOT NULL,
 	`source_id` integer
 );
 --> statement-breakpoint

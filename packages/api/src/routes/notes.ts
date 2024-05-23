@@ -6,7 +6,6 @@ import { RetrievalQAChain, loadQAStuffChain } from 'langchain/chains'
 import { PromptTemplate } from '@langchain/core/prompts'
 import { SupabaseVectorStore } from '@langchain/community/vectorstores/supabase'
 import { generateQAPairs } from '../utils/generate_qa_pairs'
-import { BasePromptTemplate } from '@langchain/core/prompts'
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter'
 import { initSupabase } from '../utils/supabase'
 
@@ -53,19 +52,19 @@ notes.post('/', async (c: CustomContext) => {
 
   await generateQAPairs(docs, c, url)
 
-  const embeddings = new OpenAIEmbeddings({
-    apiKey: c.env.OPENAI_API_KEY,
-    model: 'text-embedding-3-small',
-    dimensions: 1536,
-  })
+  // const embeddings = new OpenAIEmbeddings({
+  //     apiKey: c.env.OPENAI_API_KEY,
+  //     model: 'text-embedding-3-small',
+  //     dimensions: 1536,
+  // })
 
-  const client = initSupabase(c)
+  // const client = initSupabase(c)
 
-  await SupabaseVectorStore.fromDocuments(cleanedDocs, embeddings, {
-    client,
-    tableName: 'documents',
-    queryName: 'match_documents',
-  })
+  // await SupabaseVectorStore.fromDocuments(cleanedDocs, embeddings, {
+  //     client,
+  //     tableName: 'documents',
+  //     queryName: 'match_documents',
+  // })
 
   return c.text('Success')
 })
@@ -88,7 +87,7 @@ notes.get('/', async (c: CustomContext) => {
   })
 
   const llm = new ChatOpenAI({
-    model: 'gpt-4-turbo',
+    model: 'gpt-4o',
     temperature: 0,
     apiKey: c.env.OPENAI_API_KEY,
     streaming: true,

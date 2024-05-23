@@ -9,6 +9,7 @@ import { createDb } from './db/client'
 import OpenAI from 'openai'
 import { CustomContext } from '@t4/types'
 import { assistantSse } from './routes/assistant-sse'
+import { exercise } from './routes/exercise'
 
 export type Bindings = {
   DB: D1Database
@@ -19,7 +20,7 @@ export type Bindings = {
 const app = new Hono<{ Bindings: Bindings }>()
 
 // Setup CORS for the frontend
-app.use('/:path{^(trpc|assistant-sse|notes|sse).*}', async (c, next) => {
+app.use('/:path{^(trpc|assistant-sse|notes|sse|exercise).*}', async (c, next) => {
   if (c.env.APP_URL === undefined) {
     console.log('APP_URL is not set. CORS errors may occur.')
   }
@@ -43,5 +44,7 @@ app.use('/trpc/*', async (c, next) => {
 app.route('/assistant-sse', assistantSse)
 
 app.route('/notes', notes)
+
+app.route('/exercise', exercise)
 
 export default app

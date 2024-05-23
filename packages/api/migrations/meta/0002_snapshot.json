@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "sqlite",
-  "id": "4268f747-bd29-44fe-93bb-b2e1b2a9b477",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "1bc27204-7f8f-4f84-9a04-b02296214fda",
+  "prevId": "91aa2f41-01e3-4bde-8e9c-25fdde406eca",
   "tables": {
     "Exercise": {
       "name": "Exercise",
@@ -37,6 +37,13 @@
         },
         "source_id": {
           "name": "source_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "orderIndex": {
+          "name": "orderIndex",
           "type": "integer",
           "primaryKey": false,
           "notNull": false,
@@ -135,6 +142,8 @@
   "_meta": {
     "schemas": {},
     "tables": {},
-    "columns": {}
+    "columns": {
+      "\"Exercise\".\"order\"": "\"Exercise\".\"orderIndex\""
+    }
   }
 }

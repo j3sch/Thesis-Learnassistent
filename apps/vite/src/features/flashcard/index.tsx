@@ -6,137 +6,55 @@ import { trpc } from '@/utils/trpc'
 import { useNavigate } from '@tanstack/react-router'
 import { getNextCard, reviewCard } from './fsrs'
 import { Grade, Rating } from 'ts-fsrs'
+import { useProgressFlashcardIndex } from '@/atoms/flashcard'
+import { Review } from './Review'
+import { Card } from './card'
 
 export function FlashcardScreen() {
     const [showSolution, setShowSolution] = useState(false)
-    const [flashcardIndex, setFlashcardIndex] = useState<number | undefined>(1)
+    const [flashcardIndex, setFlashcardIndex] = useState<number>(1)
     const navigate = useNavigate({ from: '/flashcard' })
+    const [isNewCard, setIsNewCard] = useState(true)
+    const [progressIndex, setProgressIndex] = useProgressFlashcardIndex()
 
-    const { data } = trpc.assistant.getExercise.useQuery({
-        exercise_id: flashcardIndex ?? 0,
+    const { data } = trpc.exercise.get.useQuery({
+        id: flashcardIndex,
+        isNewCard: isNewCard,
     })
 
     useEffect(() => {
-        setFlashcardIndex(getNextCard())
+        const nextCard = getNextCard()
+        if (nextCard) {
+            setFlashcardIndex(nextCard.id)
+        }
     }, [])
 
     function handleReview(rating: Grade) {
         reviewCard(rating, flashcardIndex)
         setShowSolution(false)
         const nextCard = getNextCard()
-        if (!nextCard) {
+        setProgressIndex(progressIndex + 1)
+        if (!nextCard || progressIndex > 8) {
+            setProgressIndex(9)
+            setFlashcardIndex(1)
             navigate({ to: '/chat' })
+            return
         }
-        setFlashcardIndex(nextCard)
+        setIsNewCard(nextCard.isNewCard)
+        setFlashcardIndex(nextCard.id)
     }
 
     return (
         <>
-            <Header exerciseIndex={flashcardIndex} />
-            <YStack
-                width={'100%'}
-                position='fixed'
-                bottom={90}
-                top={80}
-                right={0}
-                left={0}
-                flex={1}
-                paddingHorizontal={16}
-                paddingVertical={8}
-            >
-                <YStack
-                    backgroundColor={'$color3'}
-                    maxWidth={768}
-                    mx='auto'
-                    flex={1}
-                    width={'100%'}
-                    borderRadius={'$7'}
-                    alignItems='center'
-                    padding={24}
-                    gap={'$3'}
-                >
-                    <SizableText size={'$7'}>{data?.question}</SizableText>
-                    {showSolution && (
-                        <YStack
-                            paddingTop={'$3'}
-                            borderTopColor={'$color8'}
-                            borderTopWidth={'1'}
-                            width={'100%'}
-                            flex={1}
-                            alignItems='center'
-                        >
-                            <SizableText size={'$7'}>{data?.answer}</SizableText>
-                        </YStack>
-                    )}
-                </YStack>
-            </YStack>
-            <YStack
-                position='fixed'
-                left={0}
-                right={0}
-                bottom={0}
-                height={90}
-                paddingHorizontal={16}
-                paddingVertical={8}
-                justifyContent='center'
-                alignItems='center'
-            >
-                {showSolution ? (
-                    <XStack
-                        backgroundColor={'$color3'}
-                        maxWidth={768}
-                        mx='auto'
-                        flex={1}
-                        width={'100%'}
-                        borderRadius={'$7'}
-                        alignItems='center'
-                        gap={'$3'}
-                        paddingHorizontal={8}
-                        paddingVertical={8}
-                    >
-                        <Button
-                            theme={'red'}
-                            flex={1}
-                            height={'100%'}
-                            borderRadius={13}
-                            onPress={() => handleReview(Rating.Again)}
-                        >
-                            Nochmal
-                        </Button>
-                        <Button
-                            theme={'yellow'}
-                            flex={1}
-                            height={'100%'}
-                            borderRadius={13}
-                            onPress={() => handleReview(Rating.Hard)}
-                        >
-                            Schwer
-                        </Button>
-                        <Button
-                            theme={'green'}
-                            flex={1}
-                            height={'100%'}
-                            borderRadius={13}
-                            onPress={() => handleReview(Rating.Good)}
-                        >
-                            Gut
-                        </Button>
-                        <Button
-                            theme={'blue'}
-                            flex={1}
-                            height={'100%'}
-                            borderRadius={13}
-                            onPress={() => handleReview(Rating.Easy)}
-                        >
-                            Einfach
-                        </Button>
-                    </XStack>
-                ) : (
-                    <Button onPress={() => setShowSolution(true)} size={'$5'} chromeless>
-                        Zeige Antwort
-                    </Button>
-                )}
-            </YStack>
+            <Header exerciseIndex={progressIndex} />
+            <Card exercise={data} showSolution={showSolution} />
+            <Review
+                handleReview={handleReview}
+                showSolution={showSolution}
+                setShowSolution={setShowSolution}
+                flashcardIndex={flashcardIndex}
+                setFlashcardIndex={setFlashcardIndex}
+            />
             <SourceButtomSheet />
         </>
     )

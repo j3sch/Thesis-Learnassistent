@@ -7,7 +7,7 @@ export function initTogether(c: Context) {
   if (!together) {
     together = createOpenAI({
       apiKey: c.env.TOGETHER_API_KEY,
-      baseURL: 'https://api.together.xyz/v1',
+      baseURL: 'https://api.together.xyz/v1"',
     })
     return together
   }

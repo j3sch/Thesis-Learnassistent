@@ -2,21 +2,18 @@ import { Anchor, Button, H3, H5, Label, Paragraph, Sheet, XStack, YStack } from 
 import React, { useState } from 'react'
 import { UseIsInfoSheetOpen } from '@/atoms/infoSheet'
 import { trpc } from '@/utils/trpc'
-import { useExerciseIndex } from '@/atoms/exercise'
+import { useExerciseIndex } from '@/atoms/chat'
+import { Exercise, Source } from '@t4/api/src/db/schema'
+import { ExerciseWithSource } from '@t4/types'
 
-export const SourceButtomSheet = (): React.ReactNode => {
+interface Props {
+  exercise?: ExerciseWithSource
+}
+
+export const SourceButtomSheet = (props: Props): React.ReactNode => {
+  const { exercise } = props
   const [open, setOpen] = UseIsInfoSheetOpen()
   const [position, setPosition] = useState(0)
-  const [exerciseIndex] = useExerciseIndex()
-
-  const { data } = trpc.assistant.getExercise.useQuery(
-    {
-      exercise_id: exerciseIndex,
-    },
-    {
-      refetchOnMount: false,
-    }
-  )
 
   return (
     <>
@@ -48,40 +45,40 @@ export const SourceButtomSheet = (): React.ReactNode => {
         >
           <H5>Quelle</H5>
           <YStack flex={1} width={'100%'} justifyContent='flex-start' gap='$2.5'>
-            {data?.title && (
+            {exercise?.title && (
               <XStack gap='$2.5'>
                 <Paragraph>Titel:</Paragraph>
-                <Paragraph>{data.title}</Paragraph>
+                <Paragraph>{exercise.title}</Paragraph>
               </XStack>
             )}
-            {data?.author && (
+            {exercise?.author && (
               <XStack gap='$2.5'>
                 <Paragraph>Autor:</Paragraph>
-                <Paragraph>{data.author}</Paragraph>
+                <Paragraph>{exercise.author}</Paragraph>
               </XStack>
             )}
-            {data?.date && (
+            {exercise?.date && (
               <XStack gap='$2.5'>
                 <Paragraph>Datum:</Paragraph>
-                <Paragraph>{data.date}</Paragraph>
+                <Paragraph>{exercise.date}</Paragraph>
               </XStack>
             )}
-            {data?.publisher && (
+            {exercise?.publisher && (
               <XStack gap='$2.5'>
                 <Paragraph>Herausgeber:</Paragraph>
-                <Paragraph>{data.publisher}</Paragraph>
+                <Paragraph>{exercise.publisher}</Paragraph>
               </XStack>
             )}
-            {data?.url && (
+            {exercise?.url && (
               <XStack gap='$2.5'>
                 <Paragraph>URL:</Paragraph>
-                <Anchor href={data.url}>{data.url}</Anchor>
+                <Anchor href={exercise.url}>{exercise.url}</Anchor>
               </XStack>
             )}
-            {data?.accessedOn && (
+            {exercise?.accessedOn && (
               <XStack gap='$2.5'>
                 <Paragraph>Zugegriffen am:</Paragraph>
-                <Paragraph>{data.accessedOn}</Paragraph>
+                <Paragraph>{exercise.accessedOn}</Paragraph>
               </XStack>
             )}
           </YStack>

@@ -10,15 +10,19 @@ export function getNextCard() {
         const now = new Date()
         const card = cards.reduce((prev, curr) => (prev.due < curr.due ? prev : curr))
         if (card.due <= now) {
-            return card.id
+            return { id: card.id, isNewCard: false }
         }
     }
-    if (cards.length < 10) {
+    if (cards.length <= 10) {
         const newDate = new Date()
         const card = createEmptyCard(newDate) // createEmptyCard();
-        const newCard = { id: cards.length + 1, ...card }
+        if (cards.length === 0) {
+            cards.push({ id: 1, ...card })
+            return { id: 1, isNewCard: true }
+        }
+        const newCard = { id: cards[cards.length - 1].id + 2, ...card }
         cards.push(newCard)
-        return newCard.id
+        return { id: newCard.id, isNewCard: true }
     }
 }
 

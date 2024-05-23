@@ -1,0 +1,1 @@
+ALTER TABLE `Exercise` RENAME COLUMN `orderIndex` TO `order_index`;

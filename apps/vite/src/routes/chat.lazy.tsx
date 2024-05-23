@@ -1,4 +1,4 @@
-import { createLazyFileRoute } from '@tanstack/react-router'
+import { createLazyFileRoute, createRoute } from '@tanstack/react-router'
 import { WebWrapper } from '@/features/chat/WebWrapper'
 import { ChatScreen } from '@/features/chat'
 

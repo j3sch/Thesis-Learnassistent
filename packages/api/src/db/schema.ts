@@ -1,16 +1,14 @@
 import { InferInsertModel, InferSelectModel, relations, sql } from 'drizzle-orm'
 import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { createInsertSchema, createSelectSchema } from 'drizzle-valibot'
-import { EXERCISE_TYPES_ARRAY, EXERCISE_TYPES_ENUM } from '@t4/types'
-import { serial } from 'drizzle-orm/mysql-core'
-
-//   type: text('type', { enum: EXERCISE_TYPES_ARRAY as [string, ...string[]] }),
 
 export const ExerciseTable = sqliteTable('Exercise', {
     id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
     question: text('question').notNull(),
-    answer: text('solution').notNull(),
+    answer: text('answer').notNull(),
+    conciseAnswer: text('concise_answer').notNull(),
     source: integer('source_id', { mode: 'number' }),
+    orderIndex: integer('order_index', { mode: 'number' }),
 })
 
 export type Exercise = InferSelectModel<typeof ExerciseTable>

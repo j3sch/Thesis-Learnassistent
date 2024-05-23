@@ -2,13 +2,19 @@ import { createDb } from './../db/client'
 import { CustomContext } from '@t4/types'
 import { Document } from 'langchain/document'
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter'
-import { generateQAPromptMessage } from './prompt'
+import {
+  democracyNotIdealExample,
+  distributionOfTaxRevenuesExample,
+  generateQAPromptMessage,
+  meaningDemocracyExample,
+} from './prompt'
 import { ExerciseTable, SourceTable } from '../db/schema'
 import { initTogether } from './together'
 import { generateMetaData } from './generateMetaData'
 import { CoreMessage, generateText } from 'ai'
 import { initOpenAi } from './openai'
-import { initPerplexity } from './initPerplexity'
+import { initPerplexity } from './perplexity'
+import { initAnthropic } from './anthropic'
 
 export async function generateQAPairs(docs: Document[], c: CustomContext, url: string) {
   const metadata = (await generateMetaData(url, c)) as {
@@ -35,23 +41,33 @@ export async function generateQAPairs(docs: Document[], c: CustomContext, url: s
   const together = initTogether(c)
   const openai = initOpenAi(c)
   const perplexity = initPerplexity(c)
+  const anthropic = initAnthropic(c)
   const db = createDb(c.env.DB)
 
   for (const doc of cleanedDocs) {
     try {
-      console.log('Schleifenstart')
+      console.log('----------------Schleifenstart----------------')
+
+      console.log('page content: \n', doc.pageContent)
 
       const { text } = await generateText({
         // model: together('mistralai/Mixtral-8x22B-Instruct-v0.1'),
         // model: perplexity('llama-3-70b-instruct'),
+        // model: anthropic('claude-3-sonnet-20240229'),
         // model: together('meta-llama/Llama-3-70b-chat-hf'),
-        model: openai('gpt-4o'),
+        // model: openai('gpt-4o'),
+        model: openai('gpt-4-turbo'),
         temperature: 0.2,
         messages: [
           generateQAPromptMessage as CoreMessage,
+          ...(meaningDemocracyExample as CoreMessage[]),
+          ...(distributionOfTaxRevenuesExample as CoreMessage[]),
+          ...(democracyNotIdealExample as CoreMessage[]),
           { role: 'user', content: doc.pageContent },
         ],
       })
+
+      console.log('generate exercise res text: \n', text)
 
       if (!text) continue
 
@@ -68,14 +84,8 @@ export async function generateQAPairs(docs: Document[], c: CustomContext, url: s
       const qa: {
         question: string
         answer: string
+        conciseAnswer: string
       } = JSON.parse(jsonString)
-
-      const newExercise = {
-        question: qa.question,
-        answer: qa.answer,
-      }
-
-      console.log(newExercise)
 
       const source = await db
         .insert(SourceTable)
@@ -91,14 +101,14 @@ export async function generateQAPairs(docs: Document[], c: CustomContext, url: s
       await db
         .insert(ExerciseTable)
         .values({
-          ...newExercise,
+          question: qa.question,
+          answer: qa.answer,
+          conciseAnswer: qa.conciseAnswer,
           source: source[0].id,
         })
         .run()
 
-      console.log('--------------------------------------------')
-
-      console.log('Schleifenende')
+      console.log('----------------Schleifenende----------------')
     } catch (e) {
       console.log(e)
     }

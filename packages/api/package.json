@@ -17,6 +17,7 @@
     "clean": "rm -rf .turbo node_modules"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^0.0.14",
     "@ai-sdk/openai": "^0.0.10",
     "@hono/trpc-server": "^0.1.0",
     "@langchain/community": "^0.0.54",
