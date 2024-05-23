@@ -34,7 +34,7 @@ export function FlashcardScreen() {
         setShowSolution(false)
         const nextCard = getNextCard()
         setProgressIndex(progressIndex + 1)
-        if (!nextCard || progressIndex > 8) {
+        if (!nextCard || progressIndex >= 9) {
             setProgressIndex(9)
             setFlashcardIndex(1)
             navigate({ to: '/chat' })
