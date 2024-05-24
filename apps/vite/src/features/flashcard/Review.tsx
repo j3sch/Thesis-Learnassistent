@@ -7,12 +7,10 @@ interface Props {
   handleReview: (rating: Grade) => void
   showSolution: boolean
   setShowSolution: Dispatch<SetStateAction<boolean>>
-  flashcardIndex: number
-  setFlashcardIndex: Dispatch<SetStateAction<number>>
 }
 
 export function Review(props: Props) {
-  const { handleReview, showSolution, setShowSolution, flashcardIndex, setFlashcardIndex } = props
+  const { handleReview, showSolution, setShowSolution } = props
 
   return (
     <YStack
@@ -77,14 +75,10 @@ export function Review(props: Props) {
           </Button>
         </XStack>
       ) : (
-        <XStack gap='$2'>
           <Button onPress={() => setShowSolution(true)} size={'$5'} chromeless>
             Zeige Antwort
           </Button>
-          <Button onPress={() => setFlashcardIndex(flashcardIndex + 2)} size={'$5'} chromeless>
-            Nächste Aufgabe
-          </Button>
-        </XStack>
+        
       )}
     </YStack>
   )

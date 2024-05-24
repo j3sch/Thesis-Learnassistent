@@ -73,6 +73,10 @@ export function ChatInput(props: Props) {
           Gib mir ein Hinweis
         </Button>
         <Button
+        disabledStyle={{
+          opacity: 0.5,
+        }}
+        disabled={messages.length === 0}
           onPress={handleNextExercise}
           variant={'outlined'}
           theme={isExerciseComplete ? 'green' : 'dark'}

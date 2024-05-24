@@ -1,11 +1,10 @@
 import { SourceButtomSheet } from '@/features/shared/SourceButtomSheet'
 import { Header } from '@/features/shared/Header'
-import { Button, SizableText, XStack, YStack } from 'tamagui'
 import { useEffect, useState } from 'react'
 import { trpc } from '@/utils/trpc'
 import { useNavigate } from '@tanstack/react-router'
 import { getNextCard, reviewCard } from './fsrs'
-import { Grade, Rating } from 'ts-fsrs'
+import { Grade } from 'ts-fsrs'
 import { useProgressFlashcardIndex } from '@/atoms/flashcard'
 import { Review } from './Review'
 import { Card } from './Card'
@@ -59,8 +58,6 @@ export function FlashcardScreen() {
         handleReview={handleReview}
         showSolution={showSolution}
         setShowSolution={setShowSolution}
-        flashcardIndex={flashcardIndex}
-        setFlashcardIndex={setFlashcardIndex}
       />
       <SourceButtomSheet />
     </>
