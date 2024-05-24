@@ -162,7 +162,7 @@ assistantSse.post('/', async (c: CustomContext): Promise<any> => {
   const exercise = await db
     .select()
     .from(ExerciseTable)
-    .where(eq(ExerciseTable.id, exercise_id))
+    .where(eq(ExerciseTable.orderIndex, exercise_id))
     .get()
   if (!exercise) {
     return new Error('Exercise not found')

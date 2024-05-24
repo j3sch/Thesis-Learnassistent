@@ -3,12 +3,12 @@ import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { createInsertSchema, createSelectSchema } from 'drizzle-valibot'
 
 export const ExerciseTable = sqliteTable('Exercise', {
-    id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
-    question: text('question').notNull(),
-    answer: text('answer').notNull(),
-    conciseAnswer: text('concise_answer').notNull(),
-    source: integer('source_id', { mode: 'number' }),
-    orderIndex: integer('order_index', { mode: 'number' }),
+  id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
+  question: text('question').notNull(),
+  answer: text('answer').notNull(),
+  conciseAnswer: text('concise_answer').notNull(),
+  source: integer('source_id', { mode: 'number' }),
+  orderIndex: integer('order_index', { mode: 'number' }),
 })
 
 export type Exercise = InferSelectModel<typeof ExerciseTable>
@@ -17,8 +17,8 @@ export const insertExerciseSchema = createInsertSchema(ExerciseTable)
 export const selectExerciseSchema = createSelectSchema(ExerciseTable)
 
 export const NoteTable = sqliteTable('Note', {
-    id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
-    text: text('text').notNull(),
+  id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
+  text: text('text').notNull(),
 })
 
 export type Note = InferSelectModel<typeof NoteTable>
@@ -27,20 +27,20 @@ export const insertNoteSchema = createInsertSchema(NoteTable)
 export const selectNoteSchema = createSelectSchema(NoteTable)
 
 export const SourceTable = sqliteTable('Source', {
-    id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
-    title: text('title'),
-    author: text('author'),
-    date: text('date'),
-    publisher: text('publisher'),
-    url: text('url').notNull(),
-    accessedOn: text('timestamp').default(sql`(CURRENT_TIMESTAMP)`),
+  id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
+  title: text('title'),
+  author: text('author'),
+  date: text('date'),
+  publisher: text('publisher'),
+  url: text('url').notNull(),
+  accessedOn: text('timestamp').default(sql`(CURRENT_TIMESTAMP)`),
 })
 
 export const exerciseRelations = relations(ExerciseTable, ({ one }) => ({
-    source: one(SourceTable, {
-        fields: [ExerciseTable.source],
-        references: [SourceTable.id],
-    }),
+  source: one(SourceTable, {
+    fields: [ExerciseTable.source],
+    references: [SourceTable.id],
+  }),
 }))
 
 export type Source = InferSelectModel<typeof SourceTable>

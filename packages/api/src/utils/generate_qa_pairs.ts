@@ -39,10 +39,8 @@ export async function generateQAPairs(docs: Document[], c: CustomContext, url: s
         return doc
     })
 
-    const together = initTogether(c)
     const openai = initOpenAi(c)
     const perplexity = initPerplexity(c)
-    const anthropic = initAnthropic(c)
     const db = createDb(c.env.DB)
 
     for (const doc of cleanedDocs) {
