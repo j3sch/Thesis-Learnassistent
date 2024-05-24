@@ -28,7 +28,7 @@ export async function generateQAPairs(docs: Document[], c: CustomContext, url: s
 
     const textSplitter = new RecursiveCharacterTextSplitter({
         chunkSize: 2000,
-        chunkOverlap: 250,
+        chunkOverlap: 100,
     })
     const splits = await textSplitter.splitDocuments(docs)
 
@@ -104,7 +104,7 @@ export async function generateQAPairs(docs: Document[], c: CustomContext, url: s
                     question: qa.question,
                     answer: qa.answer,
                     conciseAnswer: qa.conciseAnswer,
-                    source: source[0].id,
+                    sourceId: source[0].id,
                 })
                 .run()
 

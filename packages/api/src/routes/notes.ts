@@ -30,7 +30,7 @@ Answer in German:`
 const prompt = PromptTemplate.fromTemplate(promptTemplate)
 
 notes.post('/', async (c: CustomContext) => {
-    const { text: url } = await c.req.json()
+    const { url } = await c.req.json()
 
     const loader = new CheerioWebBaseLoader(url, {
         selector: 'article',

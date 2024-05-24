@@ -7,7 +7,7 @@ export const ExerciseTable = sqliteTable('Exercise', {
   question: text('question').notNull(),
   answer: text('answer').notNull(),
   conciseAnswer: text('concise_answer').notNull(),
-  source: integer('source_id', { mode: 'number' }),
+  sourceId: integer('source_id', { mode: 'number' }),
   orderIndex: integer('order_index', { mode: 'number' }),
 })
 
@@ -38,7 +38,7 @@ export const SourceTable = sqliteTable('Source', {
 
 export const exerciseRelations = relations(ExerciseTable, ({ one }) => ({
   source: one(SourceTable, {
-    fields: [ExerciseTable.source],
+    fields: [ExerciseTable.sourceId],
     references: [SourceTable.id],
   }),
 }))

@@ -38,7 +38,7 @@ export const exerciseRouter = router({
             accessedOn: SourceTable.accessedOn,
           })
           .from(ExerciseTable)
-          .leftJoin(SourceTable, eq(ExerciseTable.source, SourceTable.id))
+          .leftJoin(SourceTable, eq(ExerciseTable.sourceId, SourceTable.id))
           .where(eq(ExerciseTable.orderIndex, input.id))
           .get()
 
@@ -61,7 +61,7 @@ export const exerciseRouter = router({
               accessedOn: SourceTable.accessedOn,
             })
             .from(ExerciseTable)
-            .leftJoin(SourceTable, eq(ExerciseTable.source, SourceTable.id))
+            .leftJoin(SourceTable, eq(ExerciseTable.sourceId, SourceTable.id))
             .where(eq(ExerciseTable.orderIndex, firstExerciseId))
             .get()
         }
@@ -85,7 +85,7 @@ export const exerciseRouter = router({
           accessedOn: SourceTable.accessedOn,
         })
         .from(ExerciseTable)
-        .leftJoin(SourceTable, eq(ExerciseTable.source, SourceTable.id))
+        .leftJoin(SourceTable, eq(ExerciseTable.sourceId, SourceTable.id))
         .where(eq(ExerciseTable.id, input.id))
         .get()
     }),
