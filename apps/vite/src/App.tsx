@@ -5,7 +5,6 @@ import { trpc } from './utils/trpc'
 import { useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { httpBatchLink, loggerLink } from '@trpc/client'
-import superJson from 'superjson'
 import './scrollbar.css'
 
 // Import the generated route tree
@@ -30,7 +29,6 @@ export function App() {
   const [queryClient] = useState(() => new QueryClient())
   const [trpcClient] = useState(() =>
     trpc.createClient({
-      transformer: superJson,
       links: [
         loggerLink({
           enabled: (opts) =>
