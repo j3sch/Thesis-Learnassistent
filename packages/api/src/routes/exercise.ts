@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm'
+import { eq, is } from 'drizzle-orm'
 import { number, object, parse, string, boolean, optional } from 'valibot'
 import { ExerciseTable, SourceTable } from '../db/schema'
 import { publicProcedure, router } from '../trpc'
@@ -20,11 +20,9 @@ export const exerciseRouter = router({
     get: publicProcedure
         .input((raw) => parse(NextExerciseSchema, raw))
         .query(async ({ input, ctx }) => {
-            console.log('index', input.id)
             const { db, c } = ctx
 
             if (input.isNewCard) {
-                console.log('new card')
                 const exercise = await db
                     .select({
                         id: ExerciseTable.id,
@@ -43,6 +41,30 @@ export const exerciseRouter = router({
                     .leftJoin(SourceTable, eq(ExerciseTable.source, SourceTable.id))
                     .where(eq(ExerciseTable.orderIndex, input.id))
                     .get()
+
+                if (!exercise) {
+                    const isEven = input.id % 2 === 0
+                    const firstExerciseId = isEven ? 2 : 1
+
+                    return await db
+                        .select({
+                            id: ExerciseTable.id,
+                            question: ExerciseTable.question,
+                            answer: ExerciseTable.answer,
+                            conciseAnswer: ExerciseTable.conciseAnswer,
+                            orderIndex: ExerciseTable.orderIndex,
+                            title: SourceTable.title,
+                            author: SourceTable.author,
+                            date: SourceTable.date,
+                            publisher: SourceTable.publisher,
+                            url: SourceTable.url,
+                            accessedOn: SourceTable.accessedOn,
+                        })
+                        .from(ExerciseTable)
+                        .leftJoin(SourceTable, eq(ExerciseTable.source, SourceTable.id))
+                        .where(eq(ExerciseTable.orderIndex, firstExerciseId))
+                        .get()
+                }
 
                 return exercise
             }

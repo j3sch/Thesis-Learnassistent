@@ -1,4 +1,4 @@
-import { Button, SizableText, XStack, YStack } from 'tamagui'
+import { H5, SizableText, YStack } from 'tamagui'
 import { ExerciseWithSource } from '@t4/types/src'
 
 interface Props {
@@ -32,7 +32,7 @@ export function Card(props: Props) {
                 padding={24}
                 gap={'$3'}
             >
-                <SizableText size={'$7'}>{exercise?.question}</SizableText>
+                {exercise && <SizableText size={'$7'} dangerouslySetInnerHTML={{ __html: exercise.question }} />}
                 {showSolution && (
                     <YStack
                         paddingTop={'$3'}

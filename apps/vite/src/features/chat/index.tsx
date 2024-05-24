@@ -9,7 +9,7 @@ import { useProgressIndex } from '@/atoms/chat'
 import { trpc } from '@/utils/trpc'
 
 export function ChatScreen() {
-    const [exerciseIndex] = useExerciseIndex()
+    const [exerciseIndex, setExerciseIndex] = useExerciseIndex()
     const [progressIndex] = useProgressIndex()
     const [sourcesForMessages, setSourcesForMessages] = useState<Record<string, any>>({})
 
@@ -44,6 +44,13 @@ export function ChatScreen() {
             refetchOnMount: false,
         }
     )
+
+    // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+    useEffect(() => {
+        if (data?.orderIndex === 2) {
+            setExerciseIndex(2)
+        }
+    }, [data?.orderIndex])
 
     return (
         <>

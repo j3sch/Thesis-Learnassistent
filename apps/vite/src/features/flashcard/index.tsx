@@ -8,7 +8,7 @@ import { getNextCard, reviewCard } from './fsrs'
 import { Grade, Rating } from 'ts-fsrs'
 import { useProgressFlashcardIndex } from '@/atoms/flashcard'
 import { Review } from './Review'
-import { Card } from './card'
+import { Card } from './Card'
 
 export function FlashcardScreen() {
     const [showSolution, setShowSolution] = useState(false)
@@ -21,6 +21,13 @@ export function FlashcardScreen() {
         id: flashcardIndex,
         isNewCard: isNewCard,
     })
+
+    // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+    useEffect(() => {
+        if (data?.orderIndex === 1) {
+            setFlashcardIndex(1)
+        }
+    }, [data?.orderIndex])
 
     useEffect(() => {
         const nextCard = getNextCard()
