@@ -8,7 +8,7 @@ account_id = "57aeeb8bc8b9a7f109b724fe491b85f1"
 [[d1_databases]]
 binding = "DB" # i.e. available in your Worker on env.DB
 database_name = "database"
-database_id = "b1b196db-82d8-4bb1-9aad-be2286be932b"
+database_id = "e1f051d0-3ed4-4c44-977c-6bf04f5adaf9"
 migrations_dir = "migrations"
 
 # The necessary secrets are:
