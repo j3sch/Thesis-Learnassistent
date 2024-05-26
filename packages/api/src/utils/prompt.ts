@@ -7,14 +7,15 @@ export const generateQAPromptMessage = {
     Step 1: Review the provided text and decide whether the text  is suitable for a assignment. If it is suitable answer with: "Geeignet, da [erklärung]", otherwise answer with "Nicht geeignet, da". If it is suitable, proceed to Step 2.
 
     Step 2: Without creating a question decide which of the following question formats is best suited for the provided information. Answer with the name of the choosen format: 
-    - Short-Answer: "Use this format when the information involves explanations, definitions, or any content that requires a brief written response to demonstrate a deeper understanding and the ability to express it concisely."
-    - Multiple-Choice: "Choose the multiple-choice format when the text provides clear, distinct pieces of information that can be easily converted into specific questions with predefined answer options."
+      - Short-Answer: "Use this format when the information is good to test exact knwoledge and understanding of certain facts or concepts. This format is ideal for testing conceptual and abstract learning content." 
+      - Multiple-Choice: "Use this format when the information is good to test the knowledge about facts or certain numbers. This format is ideal for testing a broad range of content."
 
     Step 3: Based on the information in the provided text and the chosen format from Step 2., formulate a question that meets the following criteria:
     - Must be clear and concise.
     - Must focus on a single aspect.
     - Should be appropriate for Middle School students (Grades 7-9).
     - Is in German.
+    - You are not allowed to say "in dem Text/im Text", because the students don't have the provided text.
     - If the question format is Multiple Choice, provide the answer options in the question.
 
     Step 4: Based on the information in the provided text, create a detailed answer for the question you created in Step 3. This serves as a solution for the students. Make sure that you follow the criteria of your chosen question format from step 2.
