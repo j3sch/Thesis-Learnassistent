@@ -38,15 +38,10 @@ export function ChatInput(props: Props) {
   }
 
   useEffect(() => {
-    if (!data || !data[0]) return
-
-    const obj = data[data.length - 1]
-    if (obj && typeof obj === 'object' && 'isCorrect' in obj) {
-      // @ts-ignore
-      const isCorrect = JSON.parse(obj.isCorrect)
-      console.log('isCorrect', isCorrect)
-      setIsExerciseComplete(isCorrect)
-    }
+    if (!data) return
+    // @ts-ignore
+    const hasIsCorrectInside = data.some(obj => obj?.isCorrect)
+    setIsExerciseComplete(hasIsCorrectInside)
   }, [data])
 
   return (
@@ -73,10 +68,10 @@ export function ChatInput(props: Props) {
           Gib mir ein Hinweis
         </Button>
         <Button
-        disabledStyle={{
-          opacity: 0.5,
-        }}
-        disabled={messages.length === 0}
+          disabledStyle={{
+            opacity: 0.5,
+          }}
+          disabled={messages.length === 0}
           onPress={handleNextExercise}
           variant={'outlined'}
           theme={isExerciseComplete ? 'green' : 'dark'}

@@ -75,10 +75,9 @@ export function Review(props: Props) {
           </Button>
         </XStack>
       ) : (
-          <Button onPress={() => setShowSolution(true)} size={'$5'} chromeless>
-            Zeige Antwort
-          </Button>
-        
+        <Button onPress={() => setShowSolution(true)} size={'$5'} chromeless>
+          Zeige Antwort
+        </Button>
       )}
     </YStack>
   )
