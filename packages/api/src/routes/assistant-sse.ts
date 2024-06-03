@@ -86,20 +86,20 @@ const wrongAnswerExample = []
 const isAnswerCorrectPrompt = (question: string, solution: string) => `
 You are only allowed to answer with "true" or "false".
 Don't try to give the user feedback. 
-You are provided with the Question, the Solution to the Question and the Chat-History between you and your student.
+You are provided with the Question,  the Chat-History between you and your student and the Solution to the Question.
 
-Use the following steps to respond to user inputs. Fully restate each step before proceeding.
+Use the following steps to respond to user input. Fully restate each step before proceeding.
 
 Step 1. Look for keywords in the feedback from the tutor:
-- If the tutor says something like "nicht ganz korrekt/richtig" then answer with "false".
+- If the tutor says something like "nicht korrekt/nicht richtig/nicht ganz korrekt/nicht ganz richtig" then answer with "false".
 - If the tutor says something like "ist ein guter Anfang" then answer with "false".
 - If the tutor says something like "ist richtig/korrekt" or "sehr gut/gut gemacht" then answer with "true".
 
 If none of the above keywords are present, then continue to step 2.
 
-Step 2. Check if user has answered the question correctly:
-- If the user has not answered the question correctly or has not received the feedback, answer with "false".
-- If the user has answered the question correctly or has received the feedback, answer with "true".
+Step 2. Critically analyse the chat history to check whether the user has answered the question correctly:
+- If the user has not answered the question correctly or has not received the solution, answer with "false".
+- If the user has answered the question correctly or has received the solution, answer with "true".
 
 Question: ${question}
 
