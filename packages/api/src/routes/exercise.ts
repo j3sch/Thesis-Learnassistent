@@ -21,6 +21,7 @@ export const exerciseRouter = router({
     .input((raw) => parse(NextExerciseSchema, raw))
     .query(async ({ input, ctx }) => {
       const { db, c } = ctx
+      try {
 
       if (input.isNewCard) {
         const exercise = await db
@@ -88,6 +89,13 @@ export const exerciseRouter = router({
         .leftJoin(SourceTable, eq(ExerciseTable.sourceId, SourceTable.id))
         .where(eq(ExerciseTable.id, input.id))
         .get()
+
+      } catch (error) {
+        console.log(error)
+        if (error instanceof Error) {
+          return c.text(error.message)
+        }
+      }
     }),
 })
 

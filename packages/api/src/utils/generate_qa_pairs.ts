@@ -8,7 +8,7 @@ import {
   distributionOfTaxRevenuesExample,
   generateQAPromptMessage,
   meaningDemocracyExample,
-} from './prompt'
+} from '../prompts/prompt'
 import { ExerciseTable, SourceTable } from '../db/schema'
 import { initTogether } from './together'
 import { generateMetaData } from './generateMetaData'
