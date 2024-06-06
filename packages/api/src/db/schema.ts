@@ -16,16 +16,6 @@ export type InsertExercise = InferInsertModel<typeof ExerciseTable>
 export const insertExerciseSchema = createInsertSchema(ExerciseTable)
 export const selectExerciseSchema = createSelectSchema(ExerciseTable)
 
-export const NoteTable = sqliteTable('Note', {
-  id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
-  text: text('text').notNull(),
-})
-
-export type Note = InferSelectModel<typeof NoteTable>
-export type InsertNote = InferInsertModel<typeof NoteTable>
-export const insertNoteSchema = createInsertSchema(NoteTable)
-export const selectNoteSchema = createSelectSchema(NoteTable)
-
 export const SourceTable = sqliteTable('Source', {
   id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
   title: text('title'),
@@ -33,6 +23,7 @@ export const SourceTable = sqliteTable('Source', {
   date: text('date'),
   publisher: text('publisher'),
   url: text('url').notNull(),
+  img: text('img'),
   accessedOn: text('timestamp').default(sql`(CURRENT_TIMESTAMP)`),
 })
 

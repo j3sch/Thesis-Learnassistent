@@ -35,6 +35,7 @@ export const exerciseRouter = router({
             author: SourceTable.author,
             date: SourceTable.date,
             publisher: SourceTable.publisher,
+            img: SourceTable.img,
             url: SourceTable.url,
             accessedOn: SourceTable.accessedOn,
           })
@@ -58,6 +59,7 @@ export const exerciseRouter = router({
               author: SourceTable.author,
               date: SourceTable.date,
               publisher: SourceTable.publisher,
+              img: SourceTable.img,
               url: SourceTable.url,
               accessedOn: SourceTable.accessedOn,
             })
@@ -82,6 +84,7 @@ export const exerciseRouter = router({
           author: SourceTable.author,
           date: SourceTable.date,
           publisher: SourceTable.publisher,
+          img: SourceTable.img,
           url: SourceTable.url,
           accessedOn: SourceTable.accessedOn,
         })

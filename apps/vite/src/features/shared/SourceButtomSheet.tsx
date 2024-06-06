@@ -1,4 +1,4 @@
-import { Anchor, Button, H3, H5, Label, Paragraph, Sheet, XStack, YStack } from 'tamagui'
+import { Anchor, Button, H3, H5, Label, Paragraph, Sheet, XStack, YStack, Image } from 'tamagui'
 import React, { useState } from 'react'
 import { UseIsInfoSheetOpen } from '@/atoms/infoSheet'
 import { trpc } from '@/utils/trpc'
@@ -20,7 +20,7 @@ export const SourceButtomSheet = (props: Props): React.ReactNode => {
       <Sheet
         open={open}
         onOpenChange={setOpen}
-        snapPoints={[320]}
+        snapPoints={[380]}
         snapPointsMode='constant'
         position={position}
         onPositionChange={setPosition}
@@ -69,6 +69,19 @@ export const SourceButtomSheet = (props: Props): React.ReactNode => {
                 <Paragraph>{exercise.publisher}</Paragraph>
               </XStack>
             )}
+            {exercise?.img && (
+              <Image
+      source={{
+        uri: exercise.img,
+        
+        
+      }}
+      width={190}
+      height={66.5}
+      objectFit='contain'
+
+    />
+              )}
             {exercise?.url && (
               <XStack gap='$2.5'>
                 <Paragraph>URL:</Paragraph>
