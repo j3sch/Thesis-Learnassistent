@@ -29,7 +29,7 @@ export function ChatInput(props: Props) {
     setIsExerciseComplete(false)
     if (progressIndex >= 9) {
       setExerciseIndex(2)
-      navigate({ to: '/flashcard' })
+      navigate({ to: '/' })
     }
   }
 
@@ -71,7 +71,7 @@ export function ChatInput(props: Props) {
           disabledStyle={{
             opacity: 0.5,
           }}
-          disabled={messages.length === 0}
+          // disabled={messages.length === 0}
           onPress={handleNextExercise}
           variant={'outlined'}
           theme={isExerciseComplete ? 'green' : 'dark'}

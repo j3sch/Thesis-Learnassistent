@@ -43,7 +43,7 @@ export function FlashcardScreen() {
     if (!nextCard || progressIndex >= 9) {
       setProgressIndex(9)
       setFlashcardIndex(1)
-      navigate({ to: '/chat' })
+      navigate({ to: '/' })
       return
     }
     setIsNewCard(nextCard.isNewCard)
