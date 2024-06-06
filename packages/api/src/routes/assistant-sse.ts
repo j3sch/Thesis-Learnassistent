@@ -26,6 +26,7 @@ import { doesResContainYes } from '../utils/doesResContainYes'
 import { initAnthropic } from '../utils/anthropic'
 import { initPerplexity } from '../utils/perplexity'
 import { giveFeedbackPrompt } from '../prompts/feedbackPrompt'
+import { checkKeywordsInAnswer } from '../utils/checkKeywordsInAnswer'
 
 type SseBindings = {
   OPENAI_API_KEY: string
@@ -86,7 +87,7 @@ const wrongAnswerExample = []
 const isAnswerCorrectPrompt = (question: string, solution: string) => `
 You are only allowed to answer with "true" or "false".
 Don't try to give the user feedback. 
-You are provided with the Question,  the Chat-History between you and your student and the Solution to the Question.
+You are provided with the Question, the Chat-History between you and your student and the Solution to the Question.
 
 Use the following steps to respond to user input. Fully restate each step before proceeding.
 
@@ -98,6 +99,20 @@ Step 1. Look for keywords in the feedback from the tutor:
 If none of the above keywords are present, then continue to step 2.
 
 Step 2. Critically analyse the chat history to check whether the user has answered the question correctly:
+- If the user has not answered the question correctly or has not received the solution, answer with "false".
+- If the user has answered the question correctly or has received the solution, answer with "true".
+
+Question: ${question}
+
+Solution: ${solution}
+`
+
+const newIsAnswerCorrectPrompt = (question: string, solution: string) => `
+You are only allowed to answer with "true" or "false".
+Don't try to give the user feedback.
+You are provided with the Question, the Chat-History between you and your student and the Solution to the Question.
+
+Carefully compare the user's response in the chat history with the provided solution to determine if the question has been answered completely and correctly
 - If the user has not answered the question correctly or has not received the solution, answer with "false".
 - If the user has answered the question correctly or has received the solution, answer with "true".
 
@@ -241,6 +256,12 @@ assistantSse.post('/', async (c: CustomContext): Promise<any> => {
       },
       async onFinal(_) {
         console.log('feedback:', feedbackResult)
+        let isAnswerCorrect = false
+        const isAnsweCorrectKeywords = checkKeywordsInAnswer(feedbackResult)
+
+        console.log("isAnsweCorrectKeywords", isAnsweCorrectKeywords)
+
+        if (isAnsweCorrectKeywords === undefined) {
         const { text } = await generateText({
           // model: together('mistralai/Mixtral-8x22B-Instruct-v0.1'),
           // model: together('meta-llama/Llama-3-70b-chat-hf'),
@@ -251,28 +272,30 @@ assistantSse.post('/', async (c: CustomContext): Promise<any> => {
           messages: [
             {
               role: 'system',
-              content: isAnswerCorrectPrompt(question, solution),
+              content: newIsAnswerCorrectPrompt(question, solution),
             },
             ...messages,
           ],
         })
 
         const isAnswerCorrectLowerCase = text?.toLowerCase()
+        console.log("isAnswerCorrectLowerCase", isAnswerCorrectLowerCase)
         console.log('is answer correct? string', isAnswerCorrectLowerCase)
 
         if (isAnswerCorrectLowerCase) {
-          const isAnswerCorrect = isAnswerCorrectLowerCase.includes('true')
-          console.log('is answer correct?', isAnswerCorrect)
-          streamData.append({
-            isCorrect: isAnswerCorrect,
-          })
-          streamData.close()
+          isAnswerCorrect = isAnswerCorrectLowerCase.includes('true')
         } else {
-          streamData.append({
-            isCorrect: false,
-          })
-          streamData.close()
+          isAnswerCorrect = false
         }
+      } else {
+        isAnswerCorrect = isAnsweCorrectKeywords
+      }
+
+      streamData.append({
+        isCorrect: isAnswerCorrect,
+      })
+      streamData.close()
+        
       },
     })
 
