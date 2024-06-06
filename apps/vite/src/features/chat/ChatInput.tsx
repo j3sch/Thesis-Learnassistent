@@ -12,7 +12,7 @@ interface Props {
 
 export function ChatInput(props: Props) {
   const { chat } = props
-  const { input, messages, handleSubmit, handleInputChange, setMessages, append, data } = chat
+  const { input, messages, handleSubmit, handleInputChange, setMessages, append, data, isLoading } = chat
   const inputRef = useRef<HTMLInputElement>(null)
   const [exerciseIndex, setExerciseIndex] = useExerciseIndex()
   const [progressIndex, setProgressIndex] = useProgressIndex()
@@ -38,11 +38,14 @@ export function ChatInput(props: Props) {
   }
 
   useEffect(() => {
-    if (!data) return
+    console.log("isLoading", isLoading)
+    if (!data || isLoading) return
+    const numberOfUserMessages = messages.length/ 2
+    const dataThisExercise = data.slice(-numberOfUserMessages)
     // @ts-ignore
-    const hasIsCorrectInside = data.some(obj => obj?.isCorrect)
+    const hasIsCorrectInside = dataThisExercise.some(obj => obj?.isCorrect)
     setIsExerciseComplete(hasIsCorrectInside)
-  }, [data])
+  }, [data, isLoading])
 
   return (
     <YStack
