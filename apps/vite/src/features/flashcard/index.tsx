@@ -61,7 +61,7 @@ export function FlashcardScreen() {
         showSolution={showSolution}
         setShowSolution={setShowSolution}
       />
-      <SourceButtomSheet />
+      <SourceButtomSheet exercise={data} />
     </>
   )
 }
