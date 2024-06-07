@@ -71,17 +71,14 @@ export const SourceButtomSheet = (props: Props): React.ReactNode => {
             )}
             {exercise?.img && (
               <Image
-      source={{
-        uri: exercise.img,
-        
-        
-      }}
-      width={190}
-      height={66.5}
-      objectFit='contain'
-
-    />
-              )}
+                source={{
+                  uri: exercise.img,
+                }}
+                width={190}
+                height={66.5}
+                objectFit='contain'
+              />
+            )}
             {exercise?.url && (
               <XStack gap='$2.5'>
                 <Paragraph>URL:</Paragraph>

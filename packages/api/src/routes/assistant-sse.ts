@@ -259,43 +259,42 @@ assistantSse.post('/', async (c: CustomContext): Promise<any> => {
         let isAnswerCorrect = false
         const isAnsweCorrectKeywords = checkKeywordsInAnswer(feedbackResult)
 
-        console.log("isAnsweCorrectKeywords", isAnsweCorrectKeywords)
+        console.log('isAnsweCorrectKeywords', isAnsweCorrectKeywords)
 
         if (isAnsweCorrectKeywords === undefined) {
-        const { text } = await generateText({
-          // model: together('mistralai/Mixtral-8x22B-Instruct-v0.1'),
-          // model: together('meta-llama/Llama-3-70b-chat-hf'),
-          model: perplexity('llama-3-70b-instruct'),
-          // model: perplexity('mixtral-8x7b-instruct'),
-          // model: openai('gpt-4o'),
-          temperature: 0,
-          messages: [
-            {
-              role: 'system',
-              content: newIsAnswerCorrectPrompt(question, solution),
-            },
-            ...messages,
-          ],
-        })
+          const { text } = await generateText({
+            // model: together('mistralai/Mixtral-8x22B-Instruct-v0.1'),
+            // model: together('meta-llama/Llama-3-70b-chat-hf'),
+            model: perplexity('llama-3-70b-instruct'),
+            // model: perplexity('mixtral-8x7b-instruct'),
+            // model: openai('gpt-4o'),
+            temperature: 0,
+            messages: [
+              {
+                role: 'system',
+                content: newIsAnswerCorrectPrompt(question, solution),
+              },
+              ...messages,
+            ],
+          })
 
-        const isAnswerCorrectLowerCase = text?.toLowerCase()
-        console.log("isAnswerCorrectLowerCase", isAnswerCorrectLowerCase)
-        console.log('is answer correct? string', isAnswerCorrectLowerCase)
+          const isAnswerCorrectLowerCase = text?.toLowerCase()
+          console.log('isAnswerCorrectLowerCase', isAnswerCorrectLowerCase)
+          console.log('is answer correct? string', isAnswerCorrectLowerCase)
 
-        if (isAnswerCorrectLowerCase) {
-          isAnswerCorrect = isAnswerCorrectLowerCase.includes('true')
+          if (isAnswerCorrectLowerCase) {
+            isAnswerCorrect = isAnswerCorrectLowerCase.includes('true')
+          } else {
+            isAnswerCorrect = false
+          }
         } else {
-          isAnswerCorrect = false
+          isAnswerCorrect = isAnsweCorrectKeywords
         }
-      } else {
-        isAnswerCorrect = isAnsweCorrectKeywords
-      }
 
-      streamData.append({
-        isCorrect: isAnswerCorrect,
-      })
-      streamData.close()
-        
+        streamData.append({
+          isCorrect: isAnswerCorrect,
+        })
+        streamData.close()
       },
     })
 

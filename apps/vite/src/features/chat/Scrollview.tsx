@@ -18,7 +18,9 @@ export function ChatScrollView(props: Props) {
     <VirtualList
       data={[{ role: 'assistant', content: exercise?.question, id: '1' }, ...messages]}
       itemHeight={190}
-      renderItem={(item, index) => <ChatItem key={item.id} item={item} index={index} isLoading={isLoading} />}
+      renderItem={(item, index) => (
+        <ChatItem key={item.id} item={item} index={index} isLoading={isLoading} />
+      )}
     />
   )
 }
