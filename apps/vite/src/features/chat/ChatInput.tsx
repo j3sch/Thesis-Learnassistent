@@ -1,4 +1,4 @@
-import { Button, Form, Input, XStack, YStack } from 'tamagui'
+import { Button, Form, Input, Spinner, XStack, YStack } from 'tamagui'
 import { SendHorizontal } from '@tamagui/lucide-icons'
 import { useEffect, useRef, useState } from 'react'
 import { UseChatHelpers } from 'ai/react'
@@ -28,6 +28,7 @@ export function ChatInput(props: Props) {
     inputRef.current?.focus()
     setIsExerciseComplete(false)
     if (progressIndex >= 9) {
+      setProgressIndex(1)
       setExerciseIndex(2)
       navigate({ to: '/' })
     }
@@ -66,7 +67,6 @@ export function ChatInput(props: Props) {
           //@ts-ignore
           size='$3.5'
           onPress={handleHint}
-          // icon={isLoading ? <Spinner color={'$zinc50'} /> : <SendHorizontal size={'$1'} />}
         >
           Gib mir ein Hinweis
         </Button>
@@ -74,7 +74,7 @@ export function ChatInput(props: Props) {
           disabledStyle={{
             opacity: 0.5,
           }}
-          // disabled={messages.length === 0}
+          disabled={messages.length === 0 || isLoading}
           onPress={handleNextExercise}
           variant={'outlined'}
           theme={isExerciseComplete ? 'green' : 'dark'}
