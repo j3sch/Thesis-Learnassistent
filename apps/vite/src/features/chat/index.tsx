@@ -37,7 +37,7 @@ export function ChatScreen() {
     console.log(sourcesForMessages)
   }, [sourcesForMessages])
 
-  const { data } = trpc.exercise.get.useQuery(
+  const { data, isLoading } = trpc.exercise.get.useQuery(
     {
       id: exerciseIndex,
       isNewCard: true,
@@ -57,7 +57,7 @@ export function ChatScreen() {
   return (
     <>
       <Header exerciseIndex={progressIndex} />
-      <ChatScrollView chat={chat} exercise={data} />
+      <ChatScrollView chat={chat} exercise={data} isLoading={isLoading} />
       <ChatInput chat={chat} />
       <SourceButtomSheet exercise={data} />
     </>
