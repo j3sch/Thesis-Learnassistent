@@ -38,8 +38,10 @@ export function FlashcardScreen() {
   function handleReview(rating: Grade) {
     reviewCard(rating, flashcardIndex)
     setShowSolution(false)
+    if (isNewCard) {
+      setProgressIndex(progressIndex + 1)
+    }
     const nextCard = getNextCard()
-    setProgressIndex(progressIndex + 1)
     if (!nextCard || progressIndex >= 9) {
       setProgressIndex(1)
       setFlashcardIndex(1)

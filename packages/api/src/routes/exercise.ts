@@ -22,7 +22,6 @@ export const exerciseRouter = router({
     .query(async ({ input, ctx }) => {
       const { db, c } = ctx
       try {
-        if (input.isNewCard) {
           const exercise = await db
             .select({
               id: ExerciseTable.id,
@@ -69,28 +68,6 @@ export const exerciseRouter = router({
           }
 
           return exercise
-        }
-
-        console.log('exercise by id')
-        return await db
-          .select({
-            id: ExerciseTable.id,
-            question: ExerciseTable.question,
-            answer: ExerciseTable.answer,
-            conciseAnswer: ExerciseTable.conciseAnswer,
-            orderIndex: ExerciseTable.orderIndex,
-            title: SourceTable.title,
-            author: SourceTable.author,
-            date: SourceTable.date,
-            publisher: SourceTable.publisher,
-            img: SourceTable.img,
-            url: SourceTable.url,
-            accessedOn: SourceTable.accessedOn,
-          })
-          .from(ExerciseTable)
-          .leftJoin(SourceTable, eq(ExerciseTable.sourceId, SourceTable.id))
-          .where(eq(ExerciseTable.id, input.id))
-          .get()
       } catch (error) {
         console.log(error)
         if (error instanceof Error) {
