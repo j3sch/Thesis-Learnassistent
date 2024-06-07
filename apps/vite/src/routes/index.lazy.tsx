@@ -14,10 +14,10 @@ function Index() {
       }}
     >
       <Link to='/flashcard' className='[&.active]:font-bold'>
-        Flashcard
+        Karteikartensystem
       </Link>
       <Link to='/chat' className='[&.active]:font-bold'>
-        Chat
+        Lernassistent
       </Link>
     </div>
   )
