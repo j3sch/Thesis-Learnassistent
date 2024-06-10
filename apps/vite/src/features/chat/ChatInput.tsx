@@ -28,7 +28,7 @@ export function ChatInput(props: Props) {
     setMessages([])
     inputRef.current?.focus()
     setIsExerciseComplete(false)
-    if (progressIndex >= 9) {
+    if (progressIndex >= 8) {
       setProgressIndex(1)
       setExerciseIndex(2)
       navigate({ to: '/' })
@@ -75,7 +75,7 @@ export function ChatInput(props: Props) {
           disabledStyle={{
             opacity: 0.5,
           }}
-          disabled={messages.length === 0 || isLoading}
+          // disabled={messages.length === 0 || isLoading}
           onPress={handleNextExercise}
           variant={'outlined'}
           theme={isExerciseComplete ? 'green' : 'dark'}

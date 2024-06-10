@@ -42,7 +42,7 @@ export function FlashcardScreen() {
       setProgressIndex(progressIndex + 1)
     }
     const nextCard = getNextCard()
-    if (!nextCard || progressIndex >= 9) {
+    if (!nextCard || progressIndex >= 8) {
       setProgressIndex(1)
       setFlashcardIndex(1)
       navigate({ to: '/' })

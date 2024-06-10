@@ -1,5 +1,5 @@
 import { UseIsInfoSheetOpen } from '@/atoms/infoSheet'
-import { ArrowLeft, Info, X } from '@tamagui/lucide-icons'
+import { Info, X } from '@tamagui/lucide-icons'
 import { XStack, Button, YStack } from 'tamagui'
 import { Link } from '@tanstack/react-router'
 
@@ -46,7 +46,7 @@ export function Header(props: Props) {
             borderRadius={'$10'}
           >
             <XStack
-              width={`${(exerciseIndex ?? 1) * 10}%`}
+              width={`${(exerciseIndex ?? 1) * 11.25}%`}
               backgroundColor={'#3CB179'}
               borderRadius={'$10'}
             />
