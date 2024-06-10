@@ -265,9 +265,9 @@ assistantSse.post('/', async (c: CustomContext): Promise<any> => {
           const { text } = await generateText({
             // model: together('mistralai/Mixtral-8x22B-Instruct-v0.1'),
             // model: together('meta-llama/Llama-3-70b-chat-hf'),
-            // model: perplexity('llama-3-70b-instruct'),
+            model: perplexity('llama-3-70b-instruct'),
             // model: perplexity('mixtral-8x7b-instruct'),
-            model: openai('gpt-4o'),
+            // model: openai('gpt-4o'),
             temperature: 0,
             messages: [
               {
