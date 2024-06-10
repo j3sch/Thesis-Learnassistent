@@ -112,7 +112,7 @@ You are only allowed to answer with "true" or "false".
 Don't try to give the user feedback.
 You are provided with the Question, the Chat-History between you and your student and the Solution to the Question.
 
-Carefully compare the user's responses in the chat history with the provided solution to determine if the question has been answered correctly
+Carefully compare the chat history with the provided solution to determine if the question has been answered correctly or if the user has received the solution:
 - If the user has not answered the question correctly or has not received the solution, answer with "false".
 - If the user has answered the question correctly or has received the solution, answer with "true".
 
@@ -265,9 +265,9 @@ assistantSse.post('/', async (c: CustomContext): Promise<any> => {
           const { text } = await generateText({
             // model: together('mistralai/Mixtral-8x22B-Instruct-v0.1'),
             // model: together('meta-llama/Llama-3-70b-chat-hf'),
-            model: perplexity('llama-3-70b-instruct'),
+            // model: perplexity('llama-3-70b-instruct'),
             // model: perplexity('mixtral-8x7b-instruct'),
-            // model: openai('gpt-4o'),
+            model: openai('gpt-4o'),
             temperature: 0,
             messages: [
               {
