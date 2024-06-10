@@ -112,7 +112,7 @@ You are only allowed to answer with "true" or "false".
 Don't try to give the user feedback.
 You are provided with the Question, the Chat-History between you and your student and the Solution to the Question.
 
-Carefully compare the user's response in the chat history with the provided solution to determine if the question has been answered completely and correctly
+Carefully compare the user's responses in the chat history with the provided solution to determine if the question has been answered correctly
 - If the user has not answered the question correctly or has not received the solution, answer with "false".
 - If the user has answered the question correctly or has received the solution, answer with "true".
 
