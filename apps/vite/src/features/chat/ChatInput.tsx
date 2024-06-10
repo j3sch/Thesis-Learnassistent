@@ -65,6 +65,10 @@ export function ChatInput(props: Props) {
       <XStack maxWidth={768} mx='auto' width={'100%'} alignItems='center' gap='$2'>
         <Button
           variant='outlined'
+            disabledStyle={{
+            opacity: 0.5,
+          }}
+          disabled={isLoading}
           //@ts-ignore
           size='$3.5'
           onPress={handleHint}
@@ -75,7 +79,7 @@ export function ChatInput(props: Props) {
           disabledStyle={{
             opacity: 0.5,
           }}
-          // disabled={messages.length === 0 || isLoading}
+          disabled={messages.length === 0 || isLoading}
           onPress={handleNextExercise}
           variant={'outlined'}
           theme={isExerciseComplete ? 'green' : 'dark'}
