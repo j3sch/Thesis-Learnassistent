@@ -36,7 +36,7 @@ export function ChatInput(props: Props) {
   }
 
   function handleHint() {
-    append({ role: 'user', content: 'Gib mir ein Hinweis!' })
+    append({ role: 'user', content: 'Gib mir einen Hinweis!' })
   }
 
   useEffect(() => {
@@ -73,7 +73,7 @@ export function ChatInput(props: Props) {
           size='$3.5'
           onPress={handleHint}
         >
-          Gib mir ein Hinweis
+          Gib mir einen Hinweis
         </Button>
         <Button
           disabledStyle={{
